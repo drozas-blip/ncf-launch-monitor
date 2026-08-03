@@ -74,6 +74,7 @@
   .cmp{margin-bottom:15px} .cmp:last-child{margin-bottom:0} .cmp-l{font-size:13px;font-weight:560;margin-bottom:2px} .cmp-def{font-size:11.5px;color:var(--muted);margin-bottom:7px}
   .cmp-subgroup{margin:4px 0 15px 6px;padding-left:16px;border-left:2px solid var(--line-2)} .cmp-subgroup .cmp:last-child{margin-bottom:0}
   .cmp-subhead{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);margin-bottom:11px}
+  .cmp-subnote{font-size:11px;color:var(--muted);line-height:1.45;margin-top:-4px}
   .cmp-row{display:flex;align-items:center;gap:9px;margin-bottom:5px} .cmp-t{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;min-width:34px} .cmp-t.o{color:var(--old)} .cmp-t.n{color:var(--accent)}
   .cmp-track{flex:1;height:18px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;overflow:hidden} .cmp-f{height:100%;border-radius:5px} .cmp-f.o{background:var(--old)} .cmp-f.n{background:var(--accent)}
   .cmp-v{font-family:var(--mono);font-size:12px;font-weight:680;min-width:100px;text-align:right;font-variant-numeric:tabular-nums} .cmp-v small{color:var(--faint);font-weight:400}
@@ -401,11 +402,11 @@
     }
     var html="", open=false;
     STEPX.slice(1).forEach(function(m){
-      if(m.sub && !open){ html+='<div class="cmp-subgroup"><div class="cmp-subhead">↳ the two steps inside registration</div>'; open=true; }
+      if(m.sub && !open){ html+='<div class="cmp-subgroup"><div class="cmp-subhead">↳ two stages on the email route · Google sign-in skips OTP</div>'; open=true; }
       if(!m.sub && open){ html+='</div>'; open=false; }
       html+=cmp(m);
     });
-    if(open) html+='</div>';
+    if(open) html+='<div class="cmp-subnote">These two don\'t explain all of registration\'s drop-off — people also leave at the email-entry step, and Google sign-ups skip OTP. See the full funnel below for every step.</div></div>';
     document.getElementById("cmp").innerHTML=html;
   }
   function renderVerdict(){
