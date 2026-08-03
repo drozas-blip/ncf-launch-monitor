@@ -262,7 +262,7 @@ def verdict_new(funnel, quiz):
 # ---------------------------------------------------------- Customer.io ---
 # journey order · curated one-line descriptions (source of truth for the table)
 EMAIL_CONFIG = [
-    (83, "Welcome (eligible)", "Welcomes a lead once they qualify (after the name step) and points them to booking."),
+    (83, "Welcome (eligible)", "Account-created confirmation (subject: \"¡Cuenta creada!\") — welcomes the eligible user and shows their eligibility results."),
     (80, "Not Eligible (nurture)", "Sends results to non-eligible leads, then a nurture sequence."),
     (87, "Profile Completion Recovery", "Nudges users who verified their email but didn't finish the profile."),
     (73, "Appointment & Medical Form", "Confirms the booked consult + reschedule link, and chases the medical form."),
