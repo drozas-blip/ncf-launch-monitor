@@ -7,6 +7,7 @@ injected as CI/CD variables, locally they are read from ~/.config/secrets.env.
 import os
 import re
 import json
+import time
 import base64
 import urllib.request
 import urllib.parse
@@ -43,7 +44,7 @@ _UA = (
 )
 
 
-def _request(url, data=None, headers=None, method=None, timeout=60):
+def _request(url, data=None, headers=None, method=None, timeout=60, retries=3):
     headers = dict(headers or {})
     headers.setdefault("User-Agent", _UA)
     headers.setdefault("Accept", "application/json, text/plain, */*")
@@ -52,12 +53,26 @@ def _request(url, data=None, headers=None, method=None, timeout=60):
         body = json.dumps(data).encode("utf-8")
         headers.setdefault("Content-Type", "application/json")
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read().decode("utf-8")
-    except urllib.error.HTTPError as e:
-        raw = e.read().decode("utf-8", "replace")
-        raise RuntimeError(f"HTTP {e.code} for {url}: {raw[:400]}") from None
+    attempt = 0
+    while True:
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode("utf-8")
+            break
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode("utf-8", "replace")
+            # back off on transient errors (rate limit / upstream hiccups)
+            if e.code in (429, 500, 502, 503, 504) and attempt < retries:
+                time.sleep(min(2 ** attempt * 4, 15))
+                attempt += 1
+                continue
+            raise RuntimeError(f"HTTP {e.code} for {url}: {raw[:300]}") from None
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt < retries:
+                time.sleep(min(2 ** attempt * 4, 15))
+                attempt += 1
+                continue
+            raise RuntimeError(f"network error for {url}: {e}") from None
     if not raw:
         return None
     try:
