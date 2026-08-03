@@ -106,6 +106,72 @@ class Metabase:
         return rows[0] if rows else {}
 
 
+# ---------------------------------------------------------------- Mixpanel ---
+class Mixpanel:
+    """EU-residency Query API via service-account basic auth."""
+
+    def __init__(self):
+        self.user = os.environ["MIXPANEL_SA_USERNAME"]
+        self.secret = os.environ["MIXPANEL_SA_SECRET"]
+        self.project_id = os.environ["MIXPANEL_PROJECT_ID"]
+        tok = base64.b64encode(f"{self.user}:{self.secret}".encode()).decode()
+        self.auth = "Basic " + tok
+
+    def segmentation(self, event, from_date, to_date, unit="day", where=None, typ="general"):
+        params = {
+            "project_id": self.project_id,
+            "event": event,
+            "from_date": from_date,
+            "to_date": to_date,
+            "unit": unit,
+            "type": typ,   # general = event count (page views), unique = distinct users
+        }
+        if where:
+            params["where"] = where
+        url = "https://eu.mixpanel.com/api/2.0/segmentation?" + urllib.parse.urlencode(params)
+        return _request(url, headers={"Authorization": self.auth})
+
+
+# ---------------------------------------------------------------- Typeform ---
+class Typeform:
+    def __init__(self):
+        self.token = os.environ["TYPEFORM_TOKEN"]
+        self.h = {"Authorization": "Bearer " + self.token}
+
+    def get(self, path, **params):
+        url = "https://api.typeform.com" + path
+        if params:
+            url += "?" + urllib.parse.urlencode(params)
+        return _request(url, headers=self.h)
+
+
+# ------------------------------------------------------------- Customer.io ---
+class CustomerIO:
+    """App API (Bearer app key). Tries US then EU base."""
+
+    BASES = ["https://api.customer.io/v1", "https://api-eu.customer.io/v1"]
+
+    def __init__(self):
+        self.key = os.environ["CIO_APP_API_KEY"]
+        self.h = {"Authorization": "Bearer " + self.key}
+        self.base = None
+
+    def get(self, path, **params):
+        bases = [self.base] if self.base else self.BASES
+        last = None
+        for base in bases:
+            url = base + path
+            if params:
+                url += "?" + urllib.parse.urlencode(params)
+            try:
+                out = _request(url, headers=self.h)
+                self.base = base
+                return out
+            except RuntimeError as e:
+                last = e
+        raise last
+
+
 if __name__ == "__main__":
     # smoke test
     load_secrets()

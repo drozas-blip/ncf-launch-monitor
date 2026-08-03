@@ -47,18 +47,27 @@ redeploy.
 
 ## Data coverage (what auto-refreshes)
 
-`regen.py` is modular — one builder per block in `regen/metrics.py`, one
-`replace_*` per block in `regen/regen.py`.
+`regen.py` is modular — builders live in `regen/metrics.py`, the surgical
+in-place replacements in `regen/regen.py`. Everything below auto-refreshes daily:
 
-- ✅ **Trial cohort** (`SESS`) — Metabase (business DB). Live.
-- ✅ **Last updated** timestamp.
-- ⏳ **Daily trend, funnel, verdict, quiz, email campaigns** — builders to be added
-  (Mixpanel / Typeform / Customer.io). Until then those blocks hold the values last
-  committed to `index.html`.
+| Block | Source |
+|---|---|
+| Trial cohort tree (`SESS`) | Metabase (business DB) |
+| Full funnel (`BF`) real rows | Metabase + Mixpanel + Typeform |
+| Step completion (`STEPX`) new sides | Mixpanel (unique, flow-filtered) + Typeform |
+| Verdict (form / activation / booking / app) | Typeform + Metabase |
+| Eligibility breakdown (`QUIZ`) | Typeform response classifier |
+| Daily trend + KPIs (`TREND`) | Mixpanel (opens/completes) + Metabase (accounts/trials/bookings) |
+| Email campaigns (`EMAIL`) | Customer.io campaign metrics |
+| Last-updated stamp | — |
 
-To add a block: write `build_x()` in `metrics.py`, add `replace_x()` in `regen.py`,
-call it in `main()`. Run `python3 regen/regen.py` locally (reads
-`~/.config/secrets.env`) to test before pushing.
+**Old / baseline (May–June) values are static** and never touched — they're the
+historical benchmark. A couple of small funnel rows without a clean source
+(medical-form-before-consult, qualified-by-doctor) are also left as-is.
+
+To add/adjust a block: edit the builder in `metrics.py` and its replacement in
+`regen.py`. Run `python3 regen/regen.py` locally (reads `~/.config/secrets.env`) to
+test before pushing — it rewrites `index.html` in place and prints what it changed.
 
 ## Note: Metabase is behind Cloudflare
 
