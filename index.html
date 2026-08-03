@@ -72,6 +72,8 @@
   @media(max-width:600px){.bfrow{grid-template-columns:1fr auto;gap:4px}.bftrack{grid-column:1/-1}.bfdet{padding-left:0}}
   .dsrc{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap} .chip{font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;color:var(--muted)} .chip b{color:var(--ink);font-variant-numeric:tabular-nums}
   .cmp{margin-bottom:15px} .cmp:last-child{margin-bottom:0} .cmp-l{font-size:13px;font-weight:560;margin-bottom:2px} .cmp-def{font-size:11.5px;color:var(--muted);margin-bottom:7px}
+  .cmp-subgroup{margin:4px 0 15px 6px;padding-left:16px;border-left:2px solid var(--line-2)} .cmp-subgroup .cmp:last-child{margin-bottom:0}
+  .cmp-subhead{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);margin-bottom:11px}
   .cmp-row{display:flex;align-items:center;gap:9px;margin-bottom:5px} .cmp-t{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;min-width:34px} .cmp-t.o{color:var(--old)} .cmp-t.n{color:var(--accent)}
   .cmp-track{flex:1;height:18px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;overflow:hidden} .cmp-f{height:100%;border-radius:5px} .cmp-f.o{background:var(--old)} .cmp-f.n{background:var(--accent)}
   .cmp-v{font-family:var(--mono);font-size:12px;font-weight:680;min-width:100px;text-align:right;font-variant-numeric:tabular-nums} .cmp-v small{color:var(--faint);font-weight:400}
@@ -240,6 +242,7 @@
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · 1180 completers</span></div>
     <p class="card-sub">Of the <b>1180</b> who complete the quiz: <b style="color:var(--good)">584 eligible (49%)</b> · <b style="color:var(--crit)">596 not (51%)</b>. Reasons for "not eligible":</p>
     <div id="quiz"></div>
+    <p class="sess-def" style="border-left-color:var(--warn);margin-top:12px"><b>⚠ Under-18 is undercounted.</b> Minors aren't written to the DB, and the quiz's age question is only answered by ~6% of leads — so this bucket is a floor; the true number is higher. Reliable under-18 tracking needs the age gate wired to the backend.</p>
   </div>
 
   </div><!-- /tabFunnel -->
@@ -326,8 +329,8 @@
   var STEPX=[
     {s:"Quiz — opened → completed",src:"Typeform",nS:1660,nF:1190,oS:55292,oF:22176},
     {s:"Registration — started → account",src:"Mixpanel + DB",nS:631,nF:310,oS:1253,oF:546,dir:1},
-    {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:302,nF:250,oS:263,oF:193},
-    {s:"Name — started → completed",src:"Mixpanel · email route",nS:138,nF:113,oS:198,oF:182}];
+    {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:302,nF:250,oS:263,oF:193,sub:1},
+    {s:"Name — started → completed",src:"Mixpanel · email route",nS:138,nF:113,oS:198,oF:182,sub:1}];
   var VERDICT=[
     {l:"Form completion — opened → completed",n:71.7,o:40.1,st:"up",note:"of people who open the form, % who submit it · Typeform"},
     {l:"Activation — free trial vs paid sub",n:5.3,o:7.6,st:"watch",note:"of MQL — new: free trial (30) · old: paid subscription (105). Real test: trial→paid ~20 Aug · DB"},
@@ -386,14 +389,25 @@
     }).join("");
     document.querySelectorAll(".bfrow").forEach(function(el){el.addEventListener("click",function(){document.getElementById("bfd"+el.getAttribute("data-fd")).classList.toggle("on");});});
   }
-  function renderStep(){ document.getElementById("cmp").innerHTML=STEPX.slice(1).map(function(m){
-    var nP=m.nS?Math.round(m.nF/m.nS*1000)/10:0, oP=m.oS?Math.round(m.oF/m.oS*1000)/10:0;
-    var mx=Math.max(nP,oP)||1; function w(v){return Math.max(v/mx*88,4)}
-    var d=Math.round((nP-oP)*10)/10,cls=d>=0?"up":"down",ar=d>=0?"▲":"▼";
-    return '<div class="cmp"><div class="cmp-l">'+m.s+'</div>'+
-      '<div class="cmp-row"><span class="cmp-t n">New</span><div class="cmp-track"><div class="cmp-f n" style="width:'+w(nP)+'%"></div></div><span class="cmp-v">'+nP+'%</span></div>'+
-      '<div class="cmp-row"><span class="cmp-t o">Old</span><div class="cmp-track"><div class="cmp-f o" style="width:'+w(oP)+'%"></div></div><span class="cmp-v">'+oP+'%</span></div>'+
-      '<div class="cmp-d '+cls+'">'+ar+' '+(d>=0?"+":"")+d+'pp (new vs old)</div></div>';}).join(""); }
+  function renderStep(){
+    function cmp(m){
+      var nP=m.nS?Math.round(m.nF/m.nS*1000)/10:0, oP=m.oS?Math.round(m.oF/m.oS*1000)/10:0;
+      var mx=Math.max(nP,oP)||1; function w(v){return Math.max(v/mx*88,4)}
+      var d=Math.round((nP-oP)*10)/10,cls=d>=0?"up":"down",ar=d>=0?"▲":"▼";
+      return '<div class="cmp"><div class="cmp-l">'+m.s+'</div>'+
+        '<div class="cmp-row"><span class="cmp-t n">New</span><div class="cmp-track"><div class="cmp-f n" style="width:'+w(nP)+'%"></div></div><span class="cmp-v">'+nP+'%</span></div>'+
+        '<div class="cmp-row"><span class="cmp-t o">Old</span><div class="cmp-track"><div class="cmp-f o" style="width:'+w(oP)+'%"></div></div><span class="cmp-v">'+oP+'%</span></div>'+
+        '<div class="cmp-d '+cls+'">'+ar+' '+(d>=0?"+":"")+d+'pp (new vs old)</div></div>';
+    }
+    var html="", open=false;
+    STEPX.slice(1).forEach(function(m){
+      if(m.sub && !open){ html+='<div class="cmp-subgroup"><div class="cmp-subhead">↳ the two steps inside registration</div>'; open=true; }
+      if(!m.sub && open){ html+='</div>'; open=false; }
+      html+=cmp(m);
+    });
+    if(open) html+='</div>';
+    document.getElementById("cmp").innerHTML=html;
+  }
   function renderVerdict(){
     function card(v,horiz){
       var d=Math.round((v.n-v.o)*10)/10,ar=d>0?"▲":d<0?"▼":"–",dc=d>0?"var(--good)":d<0?"var(--crit)":"var(--faint)";
