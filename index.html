@@ -1,0 +1,556 @@
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Onboarding Flow — Launch Monitor</title>
+<style>
+  :root{
+    --ground:#F1F4F2;--surface:#FFFFFF;--surface-2:#F6F9F7;--ink:#13201C;--muted:#5C6A64;--faint:#8A968F;
+    --line:#E3E8E5;--line-2:#D0D9D4;--accent:#0F7266;--accent-2:#12897A;--old:#9AA6A0;
+    --good:#2E9E63;--warn:#C0821F;--crit:#C2433A;--info:#3A79A0;
+    --mono:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --r:12px;--r-sm:7px;--sh:0 1px 2px rgba(16,32,28,.04),0 3px 14px rgba(16,32,28,.05);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0C1210;--surface:#131B17;--surface-2:#0F1613;--ink:#E9EFEB;--muted:#95A39C;--faint:#6C7A73;
+    --line:#212C27;--line-2:#31403A;--accent:#3DB6A2;--accent-2:#54C6B3;--old:#5C6A63;
+    --good:#4FB97E;--warn:#D6A24A;--crit:#E0655A;--info:#6BA6C8;--sh:0 1px 2px rgba(0,0,0,.3),0 3px 16px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--ground:#F1F4F2;--surface:#FFFFFF;--surface-2:#F6F9F7;--ink:#13201C;--muted:#5C6A64;--faint:#8A968F;--line:#E3E8E5;--line-2:#D0D9D4;--accent:#0F7266;--accent-2:#12897A;--old:#9AA6A0;--good:#2E9E63;--warn:#C0821F;--crit:#C2433A;--info:#3A79A0;--sh:0 1px 2px rgba(16,32,28,.04),0 3px 14px rgba(16,32,28,.05)}
+  :root[data-theme="dark"]{--ground:#0C1210;--surface:#131B17;--surface-2:#0F1613;--ink:#E9EFEB;--muted:#95A39C;--faint:#6C7A73;--line:#212C27;--line-2:#31403A;--accent:#3DB6A2;--accent-2:#54C6B3;--old:#5C6A63;--good:#4FB97E;--warn:#D6A24A;--crit:#E0655A;--info:#6BA6C8;--sh:0 1px 2px rgba(0,0,0,.3),0 3px 16px rgba(0,0,0,.35)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1140px;margin:0 auto;padding:22px 20px 64px}
+  .mono{font-family:var(--mono)} h1{margin:0;font-size:1.15rem;font-weight:650;letter-spacing:-.01em} h2{margin:0;font-size:.82rem;font-weight:640}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .topbar{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+  .tb-left{display:flex;flex-direction:column;gap:3px}
+  .live{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--good)}
+  .live .dot{width:7px;height:7px;border-radius:50%;background:var(--good);animation:p 2.4s infinite}
+  @keyframes p{50%{opacity:.3}} @media (prefers-reduced-motion:reduce){.live .dot{animation:none}}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;margin-bottom:16px;box-shadow:var(--sh)}
+  .ctl{display:flex;align-items:center;gap:7px} .ctl label{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  input[type="date"]{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 8px}
+  input[type="date"]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:3px}
+  .seg button{font-family:var(--mono);font-size:11px;border:0;background:0;color:var(--muted);padding:5px 11px;border-radius:100px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .toggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;user-select:none} .toggle input{accent-color:var(--accent)}
+  .sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+  .pB{display:none;align-items:center;gap:7px} .pB.on{display:inline-flex}
+  .ctl.disabled{opacity:.5} select{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 8px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px} @media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;box-shadow:var(--sh)}
+  .kpi .k-l{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .kpi .k-v{font-size:1.85rem;font-weight:680;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums}
+  .kpi .k-s{font-size:11.5px;color:var(--faint);margin-top:1px} .kpi .k-s b{color:var(--muted);font-weight:600}
+  .kpi .k-cmp{display:flex;align-items:baseline;gap:8px;margin-top:5px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .kpi .k-cmp .a{font-size:1.5rem;font-weight:680} .kpi .k-cmp .b{font-size:1rem;color:var(--muted)} .kpi .k-cmp .d{font-size:11px;margin-left:auto}
+  .d.up{color:var(--good)} .d.down{color:var(--crit)} .d.flat{color:var(--faint)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 17px;box-shadow:var(--sh);margin-bottom:16px}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px} .card-h .lft{display:flex;align-items:center;gap:8px}
+  .card-sub{font-size:12px;color:var(--muted);margin:0 0 13px} .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);color:var(--faint);font-size:10px;font-family:var(--mono);cursor:help;position:relative}
+  .info:hover{color:var(--accent);border-color:var(--accent)}
+  .info[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:135%;left:50%;transform:translateX(-50%);width:240px;background:var(--ink);color:var(--ground);font-family:var(--sans);font-size:11.5px;line-height:1.4;padding:8px 10px;border-radius:8px;z-index:30;box-shadow:var(--sh);font-weight:400}
+  .chart-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  canvas{width:100%;height:210px;display:block} .legend{display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  .bfstage{margin-bottom:14px} .bfstage:last-child{margin-bottom:0}
+  .bfstage-h{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+  .bfrow{display:grid;grid-template-columns:210px 1fr auto;gap:12px;align-items:center;padding:5px 0;cursor:pointer;border-radius:6px} .bfrow:hover{background:var(--surface-2)}
+  .bfname{font-size:13px} .bftrack{height:24px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .bffill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:var(--r-sm) 0 0 var(--r-sm);transition:width .5s cubic-bezier(.22,1,.36,1)}
+  .bffill.warn{background:repeating-linear-gradient(45deg,var(--warn),var(--warn) 7px,color-mix(in srgb,var(--warn) 70%,#000) 7px,color-mix(in srgb,var(--warn) 70%,#000) 14px)}
+  .bffill.sub{background:var(--old);opacity:.6} .bffill.brk{background:repeating-linear-gradient(45deg,var(--crit),var(--crit) 7px,color-mix(in srgb,var(--crit) 65%,#000) 7px,color-mix(in srgb,var(--crit) 65%,#000) 14px)}
+  .bfval{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:right;min-width:120px} .bfval b{font-size:14px}
+  .bfpc{color:var(--muted)} .bfpc.lo{color:var(--crit)}
+  .bfrow.sub .bfname{color:var(--muted);font-size:12px;padding-left:12px} .bfrow.sub .bftrack{height:15px} .bfrow.sub .bfval{font-size:11.5px}
+  .tetag{font-family:var(--mono);font-size:9px;color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);border-radius:4px;padding:0 4px;vertical-align:middle}
+  .brktag{font-family:var(--mono);font-size:9px;color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 40%,transparent);border-radius:4px;padding:0 4px;vertical-align:middle}
+  .bfdet{font-family:var(--mono);font-size:11px;color:var(--muted);padding:1px 0 7px 222px;display:none} .bfdet.on{display:block}
+  @media(max-width:600px){.bfrow{grid-template-columns:1fr auto;gap:4px}.bftrack{grid-column:1/-1}.bfdet{padding-left:0}}
+  .dsrc{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap} .chip{font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;color:var(--muted)} .chip b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .cmp{margin-bottom:15px} .cmp:last-child{margin-bottom:0} .cmp-l{font-size:13px;font-weight:560;margin-bottom:2px} .cmp-def{font-size:11.5px;color:var(--muted);margin-bottom:7px}
+  .cmp-row{display:flex;align-items:center;gap:9px;margin-bottom:5px} .cmp-t{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;min-width:34px} .cmp-t.o{color:var(--old)} .cmp-t.n{color:var(--accent)}
+  .cmp-track{flex:1;height:18px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;overflow:hidden} .cmp-f{height:100%;border-radius:5px} .cmp-f.o{background:var(--old)} .cmp-f.n{background:var(--accent)}
+  .cmp-v{font-family:var(--mono);font-size:12px;font-weight:680;min-width:100px;text-align:right;font-variant-numeric:tabular-nums} .cmp-v small{color:var(--faint);font-weight:400}
+  .cmp-d{font-family:var(--mono);font-size:10.5px;margin-top:3px} .cmp-d.up{color:var(--good)} .cmp-d.down{color:var(--crit)}
+  .hb{margin-bottom:7px} .hb-t{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px} .hb-t .n{color:var(--ink)} .hb-t .n.k{color:var(--crit);font-weight:600} .hb-t .v{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+  .hb-track{height:7px;background:var(--surface-2);border-radius:100px;overflow:hidden} .hb-f{height:100%;border-radius:100px} .hb-f.g{background:var(--good)} .hb-f.w{background:var(--warn)} .hb-f.c{background:var(--crit)}
+  .tw{overflow-x:auto} table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:380px} th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)} th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500} tbody td{font-variant-numeric:tabular-nums} tbody tr:hover{background:var(--surface-2)} td.z{color:var(--faint)} .cn small{display:block;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  .gaps{display:flex;flex-wrap:wrap;gap:7px} .gchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:5px 11px;cursor:help;position:relative}
+  .gchip .gd{width:7px;height:7px;border-radius:50%} .gd.brk{background:var(--crit)} .gd.dep{background:var(--warn)} .gd.ok{background:var(--good)}
+  .gchip[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:135%;left:0;width:250px;background:var(--ink);color:var(--ground);font-size:11.5px;line-height:1.4;padding:8px 10px;border-radius:8px;z-index:30;box-shadow:var(--sh)}
+  .glegend{display:flex;gap:14px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:11px} .glegend span{display:inline-flex;align-items:center;gap:5px} .glegend i{width:7px;height:7px;border-radius:50%}
+  .tabs{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tabs button{font-family:var(--sans);font-size:13.5px;font-weight:560;border:0;background:0;color:var(--muted);padding:9px 15px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tabpane[hidden]{display:none}
+  .em-table td.cn2{max-width:230px} .em-bar{display:inline-block;height:6px;border-radius:100px;background:var(--accent);vertical-align:middle;margin-right:6px}
+  .em-bar.click{background:var(--info)} .rate{font-variant-numeric:tabular-nums}
+  .em-trig{font-family:var(--mono);font-size:10px;color:var(--faint);display:block;margin-top:1px}
+  .em-warn{color:var(--warn)}
+  .foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  .verdict-card{border-left:3px solid var(--accent)}
+  .baseline{font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:100px;padding:4px 11px;white-space:nowrap}
+  .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .src-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted);line-height:1.45;text-align:left} .src-table tr:last-child td{border-bottom:0}
+  .src-table td:first-child{color:var(--ink);font-weight:600;white-space:nowrap} .src-table td:nth-child(2){color:var(--accent);font-family:var(--mono);font-size:11px;white-space:nowrap} .src-table td b{color:var(--ink)}
+  .src-list{margin:2px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.6} .src-list li{margin-bottom:7px} .src-list b{color:var(--ink)}
+  .verdicts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px} @media(max-width:820px){.verdicts{grid-template-columns:repeat(2,1fr)}} @media(max-width:460px){.verdicts{grid-template-columns:1fr}}
+  .verdicts3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} @media(max-width:720px){.verdicts3{grid-template-columns:1fr}}
+  .mql-box{margin-top:12px;border:1px dashed var(--line-2);border-radius:var(--r);padding:12px 13px}
+  .mql-label{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .vsec{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+  .vsec-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:11px} .vsec-h b{color:var(--ink)}
+  .vsec-sub{text-transform:none;letter-spacing:0}
+  .vcard-h{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap} .vcard-h .vl{min-height:0;flex:1 1 220px;font-size:13.5px;font-weight:600} .vcard-h .vrow{margin-top:0;flex:0 0 auto} .vcard-h .vsub{margin-top:0;flex:0 0 auto}
+  .vcard{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 13px}
+  .vl{font-size:12px;color:var(--muted);min-height:32px}
+  .vrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+  .vnew{font-size:1.5rem;font-weight:680;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .vpill{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;border:1px solid;border-radius:100px;padding:2px 7px;white-space:nowrap}
+  .vsub{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:3px;font-variant-numeric:tabular-nums}
+  .vnote{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.35}
+  .stp{padding:10px 0;border-bottom:1px solid var(--line)} .stp:last-child{border-bottom:0;padding-bottom:0}
+  .stp-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+  .stp-s{font-size:13px;font-weight:600} .stp-ab{font-family:var(--mono);font-size:10px;color:var(--faint);font-weight:400;margin-left:4px}
+  .stp-v{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums} .stp-v b{color:var(--ink)}
+  .stp-track{height:9px;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;overflow:hidden}
+  .stp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:100px}
+  .stp-fill.lo{background:var(--warn)} .stp-lo{color:var(--warn)}
+  .stp-d{font-size:11px;color:var(--faint);margin-top:4px}
+  .srct{font-family:var(--mono);font-size:9.5px;color:var(--faint);border:1px solid var(--line);border-radius:100px;padding:1px 6px;white-space:nowrap}
+  .srct.dir{color:var(--warn);border-color:var(--warn)}
+  .sess-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px} @media(max-width:620px){.sess-tiles{grid-template-columns:repeat(2,1fr)}}
+  .sess-tile{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 13px;text-align:center}
+  .sess-tile .st-v{font-size:1.6rem;font-weight:680;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .sess-tile .st-l{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:2px}
+  .sess-time{display:grid;grid-template-columns:repeat(2,1fr);gap:12px} @media(max-width:620px){.sess-time{grid-template-columns:1fr}}
+  .sess-tiles{margin-bottom:12px} .sess-tile.good .st-v{color:var(--good)} .sess-tile.bad .st-v{color:var(--crit)} .sess-tile.warn .st-v{color:var(--warn)} .sess-tile.muted .st-v{color:var(--muted)} .sess-tile.sch .st-v{color:var(--info)}
+  .sess-tile.bad{border-left:3px solid var(--crit)} .sess-tile.warn{border-left:3px solid var(--warn)}
+  #sessTiles{grid-template-columns:repeat(4,1fr)} @media(max-width:620px){#sessTiles{grid-template-columns:repeat(2,1fr)}}
+  .sess-def{font-size:12px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--crit);border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px;line-height:1.45}
+  .churn-viz{display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 12px}
+  .churn-stat{background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--crit);border-radius:var(--r-sm);padding:11px 14px;display:flex;align-items:center;gap:13px}
+  .churn-stat .cs-v{font-size:2rem;font-weight:680;color:var(--crit);font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;white-space:nowrap} .churn-stat .cs-v .cs-d{font-size:1.05rem;color:var(--muted);font-weight:600}
+  .churn-stat .cs-l{font-size:12px;color:var(--muted);line-height:1.35} .churn-stat .cs-l b{color:var(--ink)}
+  /* trial cohort tree */
+  .tree{display:flex;flex-direction:column;gap:11px;margin:2px 0 14px}
+  .tgroup{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .tparent{flex:0 0 208px;display:flex;flex-direction:column;justify-content:center;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 14px}
+  .tparent .tp-v{font-size:1.5rem;font-weight:680;font-variant-numeric:tabular-nums;line-height:1}
+  .tparent .tp-l{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:4px}
+  .tparent.good{border-left:3px solid var(--good)} .tparent.good .tp-v{color:var(--good)}
+  .tparent.sch{border-left:3px solid var(--info)} .tparent.sch .tp-v{color:var(--info)}
+  .tparent.bad{border-left:3px solid var(--crit)} .tparent.bad .tp-v{color:var(--crit)}
+  .tkids{flex:1 1 250px;display:flex;flex-direction:column;justify-content:center;gap:7px;padding-left:26px;position:relative}
+  .tkids::before{content:"";position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:var(--line-2)}
+  .tleaf{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:12.5px}
+  .tleaf::before{content:"";position:absolute;left:-13px;top:50%;width:13px;height:2px;background:var(--line-2)}
+  .tleaf .lf-l{color:var(--muted)} .tleaf .lf-l b{color:var(--ink)} .tleaf .lf-x{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:3px;letter-spacing:.02em}
+  .tleaf .lf-v{font-family:var(--mono);font-weight:680;font-variant-numeric:tabular-nums;font-size:13.5px} .tleaf .lf-p{color:var(--muted);font-weight:600;font-size:11px;margin-left:7px}
+  .tleaf.sub .lf-v{color:var(--good)} .tleaf.uns .lf-v{color:var(--crit)} .tleaf.sub{border-left:2px solid var(--good)} .tleaf.uns{border-left:2px solid var(--crit)}
+  .tree-sum2{display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:3px;padding-top:11px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .tree-sum2 .ts{display:flex;align-items:center;gap:7px} .tree-sum2 .ts b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .tree-sum2 .ts i{width:9px;height:9px;border-radius:2px;display:inline-block} .tree-sum2 .ts.s i{background:var(--good)} .tree-sum2 .ts.u i{background:var(--crit)}
+  @media(max-width:560px){.tparent{flex:0 0 100%} .tkids{flex:1 1 100%;padding-left:16px;margin-top:7px}}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="tb-left"><h1>New Onboarding Flow — Launch Monitor</h1></div>
+    <span class="live" id="lastUpdated"><span class="dot"></span>Last updated <b>3 Aug 2026</b> · 13:58 CEST</span>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="funnel">Funnel</button>
+    <button role="tab" aria-selected="false" data-tab="email">Email campaigns</button>
+    <button role="tab" aria-selected="false" data-tab="sources">Sources</button>
+  </div>
+
+  <div id="tabFunnel" class="tabpane">
+  <div class="controls">
+    <div class="ctl"><label>From</label><input type="date" id="from"></div>
+    <div class="ctl"><label>To</label><input type="date" id="to"></div>
+    <div class="seg" id="presets" role="group" aria-label="Presets">
+      <button data-r="7">7D</button><button data-r="30">30D</button>
+      <button data-r="launch" aria-pressed="true">Launch</button><button data-r="all">All</button></div>
+    <div class="sep"></div>
+    <label class="toggle"><input type="checkbox" id="cmpToggle">Compare periods</label>
+    <div class="pB" id="periodB"><span class="mono" style="font-size:10px;color:var(--muted)">vs</span>
+      <div class="ctl"><label>B from</label><input type="date" id="fromB"></div><div class="ctl"><label>B to</label><input type="date" id="toB"></div></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <!-- 1. NEW VS OLD — one block: form completion → step completion → activation -->
+  <div class="card verdict-card">
+    <div class="card-h"><div class="lft"><h2>Is the new flow working? — new vs old</h2>
+      <span class="info" data-tip="New vs old on reliable, matched metrics — see the Sources tab for how each is measured.">i</span></div>
+      <span class="baseline">OLD = MAY–JUNE 2026 · NEW = SINCE LAUNCH</span></div>
+    <div id="verdictForm"></div>
+    <div class="vsec">
+      <div class="vsec-h">Step completion <span class="vsec-sub">· finished ÷ started per step</span></div>
+      <div id="cmp"></div>
+    </div>
+    <div class="vsec">
+      <div class="vsec-h"><b>MQL</b> — of eligible leads <span class="vsec-sub">· new 584 · old 1379 · activation vs old</span></div>
+      <div id="verdictMql" class="verdicts3"></div>
+    </div>
+  </div>
+
+  <!-- 3. DAILY FUNNEL -->
+  <div class="card">
+    <div class="chart-top"><div class="lft"><h2>Daily funnel — new flow</h2>
+      <span class="info" data-tip="New-flow volume per day since launch. See the Sources tab for where each line comes from.">i</span></div>
+      <div class="seg" id="metric" role="group" aria-label="View"><button data-m="funnel" aria-pressed="true">Funnel</button><button data-m="act">Activation</button><button data-m="qr">Quality %</button></div></div>
+    <p class="card-sub" id="chartSub" style="margin:2px 0 9px"></p>
+    <canvas id="chart" aria-label="Daily trend"></canvas>
+    <div class="legend" id="chartLegend"></div>
+  </div>
+
+  <!-- 4. FULL FUNNEL -->
+  <div class="card">
+    <div class="card-h"><div class="lft"><h2>Full funnel — every step</h2>
+      <span class="info" data-tip="Every step of the new flow since launch. ✓ real = from the business DB (test excluded); details on the Sources tab.">i</span></div>
+      <span class="mono" style="font-size:11px;color:var(--muted)">new flow · since launch · through 3 Aug · <b>click a row for details</b></span></div>
+    <p class="card-sub" style="margin:-2px 0 14px">Bars &amp; % are <b>step-to-step</b> (share of the previous step), not of the total. <span class="tetag">✓ real</span> = test excluded (business DB); other steps are anonymous Mixpanel events with a small share of test users.</p>
+    <div id="bigfunnel"></div>
+  </div>
+
+  <!-- 5. TRIAL COHORT (new only) -->
+  <div class="card">
+    <div class="card-h"><div class="lft"><h2>Trial cohort — reaching the doctor</h2>
+      <span class="info" data-tip="The trial cohort (users who started a free trial), grouped by whether they've reached the doctor. No-show rate & time-to-doctor are vs old (May–June 2026).">i</span></div>
+      <span class="mono" style="font-size:11px;color:var(--muted)">new flow · <span id="sessCount"></span> trials · DB</span></div>
+    <div id="sessTree" class="tree"></div>
+    <div id="sessTime" class="sess-time"></div>
+  </div>
+
+  <!-- 6. ELIGIBILITY (new only) -->
+  <div class="card">
+    <div class="card-h"><div class="lft"><h2>Eligibility &amp; why leads filter out</h2>
+      <span class="info" data-tip="Of quiz completers (Typeform, new flow): who's eligible, and why the rest aren't.">i</span></div>
+      <span class="mono" style="font-size:11px;color:var(--muted)">new flow · 1180 completers</span></div>
+    <p class="card-sub">Of the <b>1180</b> who complete the quiz: <b style="color:var(--good)">584 eligible (49%)</b> · <b style="color:var(--crit)">596 not (51%)</b>. Reasons for "not eligible":</p>
+    <div id="quiz"></div>
+  </div>
+
+  </div><!-- /tabFunnel -->
+
+  <div id="tabEmail" class="tabpane" hidden>
+    <div class="kpis" id="emKpis"></div>
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2>NCF email campaigns · performance</h2>
+        <span class="info" data-tip="The 11 NCF automations in Customer.io · last 30 days.">i</span></div>
+        <span class="mono" style="font-size:11px;color:var(--muted)">last 30 days · Customer.io</span></div>
+      <div class="tw"><table class="em-table"><thead><tr>
+        <th>Campaign</th><th>Sent</th><th>Deliv.</th><th>Open</th><th>Click</th><th>Conv.</th><th>Unsub</th></tr></thead>
+        <tbody id="emBody"></tbody></table></div>
+      <p class="card-sub" style="margin:13px 0 0">Open/click rates are <b>of delivered</b>. <b class="em-warn">⚠ Payment Recovery</b> delivered 157 of 197 sent — ~20% not delivered (bounces / bad numbers), worth a look. Volumes are still small; treat as directional.</p>
+    </div>
+  </div><!-- /tabEmail -->
+
+  <div id="tabSources" class="tabpane" hidden>
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2>Where the data comes from</h2></div>
+        <span class="mono" style="font-size:11px;color:var(--muted)">methodology · through 3 Aug 2026</span></div>
+      <p class="card-sub">Every number on the Funnel tab, its source, and how reliable it is.</p>
+      <div class="tw"><table class="src-table"><thead><tr><th>What</th><th>Source</th><th>How it's measured</th></tr></thead><tbody>
+        <tr><td>Form opens &amp; completes</td><td>Typeform</td><td>The form's own Insights API — unique visits &amp; submissions. <b>Reliable</b> (the form counts itself).</td></tr>
+        <tr><td>Quiz eligibility (MQL)</td><td>Typeform</td><td><span class="mono">qualified</span> variable (yes/no). MQL = eligible leads: <b>new 584 · old 1379</b>.</td></tr>
+        <tr><td>Registration · OTP · Name</td><td>Mixpanel</td><td>Unique users by <span class="mono">landing_source</span>. New reliable; old registration event under-fires → <b>directional</b>.</td></tr>
+        <tr><td>Accounts created</td><td>Business DB</td><td><span class="mono">users</span>, flow = new_onboarding_flow, test excluded.</td></tr>
+        <tr><td>Trials</td><td>Business DB</td><td><span class="mono">new_subscriptions</span> with a trial.</td></tr>
+        <tr><td>Bookings · Consults · No-shows</td><td>Business DB</td><td><span class="mono">meetings_view</span> — status <span class="mono">done</span>, Calendly <span class="mono">user_no_show_at</span>.</td></tr>
+        <tr><td>Qualified by doctor</td><td>Health DB</td><td><span class="mono">user_health_profiles.qualification_status</span>.</td></tr>
+        <tr><td>App installs</td><td>Business DB + CIO</td><td><span class="mono">user_firebase_tokens</span> (device token). <b>Cross-checked</b>: 24/24 also new_onboarding_flow in Customer.io.</td></tr>
+        <tr><td>Email campaigns</td><td>Customer.io</td><td>The 11 <span class="mono">new-conversion-flow</span> automations · last 30 days.</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2>Baseline &amp; caveats</h2></div></div>
+      <ul class="src-list">
+        <li><b>Old = the comparison baseline is May–June 2026</b> — the old flow's steady state before the 20 Jul cutover. New = since launch (20 Jul).</li>
+        <li>Booking &amp; app rates are matched <b>within 2 days of signup</b>, so account maturity doesn't skew the comparison.</li>
+        <li>Test users are excluded in the DB (email/name contains <span class="mono">test</span>/<span class="mono">nexu</span>). Mixpanel events can't be test-filtered (small share).</li>
+        <li>There is <b>no "payment-page viewed" event</b> — the checkout funnel isn't measurable per flow (Stripe only shows completed charges).</li>
+        <li>Channel attribution (paid vs organic) is empty in the data.</li>
+      </ul>
+    </div>
+  </div><!-- /tabSources -->
+
+  <div class="foot"><span>Mixpanel · Typeform · Customer.io · Metabase</span><span>Data 01 Jun – 3 Aug 2026</span></div>
+</div>
+
+<script>
+(function(){
+  var TREND = [{"d":"06-01","o":{"op":28,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-02","o":{"op":59,"ld":3,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-03","o":{"op":58,"ld":3,"el":3,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-04","o":{"op":84,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-05","o":{"op":50,"ld":0,"el":0,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-06","o":{"op":18,"ld":0,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-07","o":{"op":77,"ld":1,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-08","o":{"op":56,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-09","o":{"op":31,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-10","o":{"op":60,"ld":3,"el":3,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-11","o":{"op":53,"ld":3,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-12","o":{"op":21,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-13","o":{"op":49,"ld":3,"el":3,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-14","o":{"op":59,"ld":3,"el":0,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-15","o":{"op":56,"ld":3,"el":1,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-16","o":{"op":35,"ld":1,"el":0,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-17","o":{"op":56,"ld":4,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-18","o":{"op":69,"ld":5,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-19","o":{"op":46,"ld":2,"el":2,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-20","o":{"op":64,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-21","o":{"op":50,"ld":3,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-22","o":{"op":1061,"ld":26,"el":7,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-23","o":{"op":1998,"ld":43,"el":13,"ac":7,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-24","o":{"op":2865,"ld":48,"el":9,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-25","o":{"op":1919,"ld":54,"el":28,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-26","o":{"op":1286,"ld":41,"el":23,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-27","o":{"op":1401,"ld":36,"el":15,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-28","o":{"op":1593,"ld":48,"el":30,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-29","o":{"op":699,"ld":27,"el":10,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-30","o":{"op":875,"ld":28,"el":15,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-01","o":{"op":171,"ld":4,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-02","o":{"op":1116,"ld":19,"el":7,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-03","o":{"op":1784,"ld":68,"el":37,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-04","o":{"op":1962,"ld":74,"el":42,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-05","o":{"op":1464,"ld":46,"el":14,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-06","o":{"op":1510,"ld":54,"el":29,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-07","o":{"op":1464,"ld":37,"el":16,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-08","o":{"op":1562,"ld":45,"el":13,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-09","o":{"op":1561,"ld":34,"el":18,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-10","o":{"op":1686,"ld":56,"el":26,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-11","o":{"op":1471,"ld":47,"el":19,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-12","o":{"op":1430,"ld":49,"el":27,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-13","o":{"op":1355,"ld":30,"el":16,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-14","o":{"op":1361,"ld":35,"el":18,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-15","o":{"op":1266,"ld":45,"el":20,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-16","o":{"op":1574,"ld":37,"el":16,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-17","o":{"op":1188,"ld":31,"el":12,"ac":3,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-18","o":{"op":1306,"ld":50,"el":21,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-19","o":{"op":1285,"ld":49,"el":22,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-20","o":{"op":237,"ld":8,"el":5,"ac":4,"acR":0,"tr":0,"bk":0},"n":{"op":653,"ld":126,"el":63,"ac":44,"acR":39,"tr":1,"bk":1}},{"d":"07-21","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":341,"ld":157,"el":69,"ac":62,"acR":47,"tr":4,"bk":4}},{"d":"07-22","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":374,"ld":168,"el":74,"ac":58,"acR":38,"tr":2,"bk":2}},{"d":"07-23","o":{"op":2,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":243,"ld":91,"el":46,"ac":36,"acR":36,"tr":3,"bk":2}},{"d":"07-24","o":{"op":1,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":111,"ld":49,"el":24,"ac":26,"acR":12,"tr":0,"bk":1}},{"d":"07-25","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":94,"ld":29,"el":18,"ac":18,"acR":15,"tr":1,"bk":1}},{"d":"07-26","o":{"op":1,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":102,"ld":46,"el":27,"ac":25,"acR":22,"tr":4,"bk":4}},{"d":"07-27","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":91,"ld":38,"el":21,"ac":18,"acR":23,"tr":3,"bk":3}},{"d":"07-28","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":82,"ld":38,"el":25,"ac":19,"acR":19,"tr":1,"bk":1}},{"d":"07-29","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":110,"ld":63,"el":27,"ac":33,"acR":26,"tr":4,"bk":7}},{"d":"07-30","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":98,"ld":54,"el":32,"ac":12,"acR":9,"tr":2,"bk":2}},{"d":"07-31","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":83,"ld":33,"el":23,"ac":4,"acR":6,"tr":1,"bk":2}},{"d":"08-01","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":23,"ld":10,"el":6,"ac":8,"acR":10,"tr":2,"bk":0}},{"d":"08-02","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":46,"ld":19,"el":10,"ac":16,"acR":11,"tr":1,"bk":1}},{"d":"08-03","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":29,"ld":10,"el":6,"ac":4,"acR":4,"tr":1,"bk":1}}];
+  var YEAR="2026", fullDate=function(i){return YEAR+"-"+TREND[i].d;}, idxByDate={};
+  TREND.forEach(function(x,i){idxByDate[YEAR+"-"+x.d]=i;}); var LAST=TREND.length-1;
+
+  var BF=[
+    {s:"Quiz",steps:[
+      {n:"Lead form opened",v:1646,base:0,d:"Unique visitors to the quiz page — Typeform's own count (the form itself)."},
+      {n:"Lead form completed",v:1180,base:1646,d:"Form submissions — Typeform's own count. 72% of people who open the form complete it. (Mixpanel's 'Lead Form Completed' event under-fires this, so we use Typeform.)"},
+      {n:"↳ Eligible",v:584,base:1180,sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
+      {n:"↳ Not eligible",v:596,base:1180,sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
+    {s:"Registration → account",steps:[
+      {n:"Registration started",v:612,base:1180,d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
+      {n:"↳ email — reached OTP",v:296,base:612,sub:1,d:"OTP code sent (email sign-ups only)"},
+      {n:"↳ email — OTP verified",v:246,base:296,sub:1,d:"Entered the code correctly (−50 drop at OTP)"},
+      {n:"↳ Google sign-in (skips OTP)",v:121,base:612,sub:1,d:"Derived: Mixpanel 'registration completed' (367) − OTP-verified (246). Name comes from Google — no OTP."},
+      {n:"Account created",v:317,base:612,te:1,d:"Real accounts · test excluded (business DB). Mixpanel 'completed' event fired 367 (higher — anonymous/test)."}]},
+    {s:"Profile — name",steps:[
+      {n:"Name step started",v:137,base:317,bl:"accounts",d:"/collect-name · of accounts (email/standard route)"},
+      {n:"Name step completed",v:112,base:137,sub:1,d:"Name saved (−25 drop)"}]},
+    {s:"Trial",steps:[
+      {n:"Trial started",v:31,base:317,bl:"accounts",te:1,d:"subscription created · Metabase · trial at signup"},
+      {n:"In trial (active)",v:24,base:31,te:1,sub:1,d:"still in trial"},
+      {n:"Cancelled during trial",v:7,base:31,bl:"trials",warn:1,te:1,sub:1,d:"dropped — churned before paying"}]},
+    {s:"Consult & qualification",steps:[
+      {n:"Booked a consult",v:28,base:317,bl:"accounts",te:1,d:"Has a scheduled meeting (business DB, test excluded)."},
+      {n:"↳ Medical form before consult",v:27,base:28,sub:1,d:"27 of 28 did the medical form before the call — so the doctor has the history ready."},
+      {n:"Meeting done",v:16,base:28,te:1,d:"Consult actually held (status=done). The rest: no-show, scheduled ahead or cancelled — see the Trial cohort block below."},
+      {n:"Qualified by doctor",v:15,base:16,sub:1,te:1,d:"qualification_status = qualified after the consult — 15 of 16 held. Health DB."}]},
+    {s:"App",steps:[
+      {n:"Installed the app",v:27,base:317,bl:"accounts",te:1,d:"Has a Firebase push token = app installed & opened (business DB, test excluded). No Mixpanel install event — this is the reliable source."}]}
+  ];
+  var QUIZ=[{n:"Eligible ✓",v:584,c:"g"},{n:"BMI < 27",v:327,c:"c",k:1},{n:"BMI 27–29, no comorbidity",v:96,c:"c",k:1},
+    {n:"Contraindication",v:86,c:"w"},{n:"Under 18",v:72,c:"w"},{n:"Pregnant / breastfeeding",v:14,c:"w"}]; var QTOT=1180;
+  var STEPX=[
+    {s:"Quiz — opened → completed",src:"Typeform",nS:1646,nF:1180,oS:55292,oF:22176},
+    {s:"Registration — started → account",src:"Mixpanel + DB",nS:612,nF:317,oS:1253,oF:546,dir:1},
+    {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:296,nF:246,oS:263,oF:193},
+    {s:"Name — started → completed",src:"Mixpanel · email route",nS:137,nF:112,oS:198,oF:182}];
+  var VERDICT=[
+    {l:"Form completion — opened → completed",n:71.7,o:40.1,st:"up",note:"of people who open the form, % who submit it · Typeform"},
+    {l:"Activation — free trial vs paid sub",n:5.1,o:7.6,st:"watch",note:"of MQL — new: free trial (30) · old: paid subscription (105). Real test: trial→paid ~20 Aug · DB"},
+    {l:"Consult booking",n:4.8,o:11.3,st:"design",note:"of MQL · new defers the consult behind the trial (28 vs 156) · DB"},
+    {l:"App install",n:3.9,o:19.4,st:"watch",note:"of MQL · web-first flow isn't getting users into the app (23 vs 267) · DB"}];
+  var NCF=[{n:"Not Eligible (nurture)",id:80,d:154,o:63,c:16},{n:"Payment Recovery",id:85,d:93,o:23,c:10},
+    {n:"Appointment & Medical Form",id:73,d:62,o:25,c:11},{n:"Welcome (eligible)",id:83,d:50,o:16,c:3},
+    {n:"Booking Recovery",id:86,d:18,o:4,c:0},{n:"Post Medical Form Conf.",id:81,d:18,o:5,c:1},
+    {n:"Profile Completion Rec.",id:87,d:13,o:3,c:1},{n:"No-show",id:79,d:10,o:5,c:2},
+    {n:"Reschedule / Cancel",id:74,d:4,o:2,c:0},{n:"App Onboarding",id:75,d:0,o:0,c:0},{n:"Trial Pre-Renewal",id:82,d:0,o:0,c:0}];
+  var GAPS=[
+    {s:"ok",h:"'Opened' event = not broken, re-cased",t:"Commit 27117bf (23 Jul release) re-cased the event: 'Lead form page view' → 'lead form page view'. Mixpanel is case-sensitive so the old report flatlined, but data kept flowing under the new name. Dashboard now sums both. Fix: align casing in events.ts or alias the two in Mixpanel Lexicon."},
+    {s:"ok",h:"lead form started restored",t:"Separate fix (commit 42c447c, 27 Jul) after upgrading @typeform/embed-react v2→v3: start tracking moved to the Widget's onStarted callback. Carries form_id."},
+    {s:"brk",h:"Medical form barely served",t:"Config still points at the staging id (HiwQLcxQ) not vU2VlsSh — most new-flow users get the old medical form. P1."},
+    {s:"brk",h:"Disqualified users not blocked",t:"A quiz 'not eligible' result still registers + starts a trial. No backend eligibility gate."},
+    {s:"brk",h:"Payment Succeed has no user_id",t:"Can't attribute successful payments to a user/flow. (Payment Failed WAS fixed — now has user_id + error_code.)"},
+    {s:"brk",h:"No checkout page-view event",t:"Can't measure who lands on the payment page vs clicks a plan."},
+    {s:"ok",h:"App installs measurable (Firebase)",t:"No Mixpanel install event, but the business DB's user_firebase_tokens = app installed & opened. 14 of new-flow accounts have the app. A dedicated 'Application Opened' event (Razie's BAL-2048) would make it real-time in Mixpanel too."},
+    {s:"brk",h:"Channel attribution null",t:"first_traffic_source, gclid… empty — no paid vs organic split."},
+    {s:"ok",h:"Calendly booking now tracked",t:"'doctor web calendly started/confirmed' with landing_source — the booking step is finally measurable (was 0)."},
+    {s:"ok",h:"Payment Failed enriched",t:"Now carries user_id, email, error_code, error_message — ready for the first real charges (~20 Aug)."},
+    {s:"ok",h:"Staging form pkWnj2LY",t:"No longer leaking into production events."}];
+
+  var S={from:0,to:LAST,flow:"n",metric:"funnel",cmp:false,fromB:0,toB:0};
+  function sum(m,fl,a,b){var t=0;for(var i=a;i<=b;i++)t+=TREND[i][fl][m];return t;}
+  function agg(fl,a,b){ if(fl==="both")return {op:sum("op","o",a,b)+sum("op","n",a,b),ld:sum("ld","o",a,b)+sum("ld","n",a,b),el:sum("el","o",a,b)+sum("el","n",a,b),ac:sum("ac","o",a,b)+sum("ac","n",a,b)};
+    return {op:sum("op",fl,a,b),ld:sum("ld",fl,a,b),el:sum("el",fl,a,b),ac:sum("ac",fl,a,b)}; }
+  function fmtDelta(a,b,pp){ if(a===null||b===null||(a===0&&b===0))return {t:"—",c:"flat"};
+    var d=pp?Math.round((a-b)*10)/10:(b?Math.round((a-b)/b*1000)/10:0); return {t:(d>0?"▲ +":d<0?"▼ ":"– ")+d+(pp?"pp":"%"),c:d>0?"up":d<0?"down":"flat"}; }
+
+  function renderKpis(){
+    var A=agg(S.flow,S.from,S.to);
+    var defs=[["Leads captured","ld",function(x){return x.ld}],["Qualification rate","qr",function(x){return x.ld?Math.round(x.el/x.ld*1000)/10:0}],
+      ["Accounts created","ac",function(x){return x.ac}],["Lead form opened","op",function(x){return x.op}]];
+    document.getElementById("kpis").innerHTML=defs.map(function(D){
+      var isRate=D[1]==="qr",va=D[2](A);
+      if(!S.cmp){ var s=D[1]==="ld"?("<b>"+(A.op?(A.ld/A.op*100).toFixed(1):0)+"%</b> of opens"):D[1]==="qr"?("<b>"+A.el+"</b> eligible"):D[1]==="ac"?("<b>"+(A.ld?(A.ac/A.ld*100).toFixed(0):0)+"%</b> of leads"):"in range";
+        return '<div class="kpi"><div class="k-l">'+D[0]+'</div><div class="k-v">'+(isRate?va+"%":va.toLocaleString())+'</div><div class="k-s">'+s+'</div></div>'; }
+      var B=agg(S.flow,S.fromB,S.toB),vb=D[2](B),dl=fmtDelta(va,vb,isRate);
+      return '<div class="kpi"><div class="k-l">'+D[0]+'</div><div class="k-cmp"><span class="a">'+(isRate?va+"%":va.toLocaleString())+'</span><span class="b">B '+(isRate?vb+"%":vb.toLocaleString())+'</span><span class="d '+dl.c+'">'+dl.t+'</span></div><div class="k-s">A vs B</div></div>';
+    }).join("");
+  }
+  function renderFunnel(){
+    document.getElementById("bigfunnel").innerHTML=BF.map(function(g){
+      var rows=g.steps.map(function(st){ var id=g.s.replace(/\W/g,"")+st.n.replace(/\W/g,"");
+        var pct = st.base ? Math.round(st.v/st.base*1000)/10 : null;         // relative to previous step
+        var w = st.base ? Math.min(st.v/st.base*100,100) : 100;
+        var pcH = pct!==null ? '<span class="bfpc'+(pct<40?" lo":"")+'">'+pct+'%</span>' : '';
+        var fillcls=st.warn?" warn":st.brk?" brk":st.sub?" sub":"";
+        return '<div class="bfrow'+(st.sub?" sub":"")+'" data-fd="'+id+'"><span class="bfname">'+st.n+
+          (st.warn?' <span style="color:var(--warn)">⚠</span>':'')+(st.te?' <span class="tetag">✓ real</span>':'')+(st.brk?' <span class="brktag">⚠ broke</span>':'')+'</span>'+
+          '<div class="bftrack"><div class="bffill'+fillcls+'" style="width:'+w+'%"></div></div>'+
+          '<span class="bfval"><b>'+st.v.toLocaleString()+'</b> '+pcH+'</span></div><div class="bfdet" id="bfd'+id+'">'+st.d+'</div>';
+      }).join("");
+      return '<div class="bfstage"><div class="bfstage-h">'+g.s+'</div>'+rows+'</div>';
+    }).join("");
+    document.querySelectorAll(".bfrow").forEach(function(el){el.addEventListener("click",function(){document.getElementById("bfd"+el.getAttribute("data-fd")).classList.toggle("on");});});
+  }
+  function renderStep(){ document.getElementById("cmp").innerHTML=STEPX.slice(1).map(function(m){
+    var nP=m.nS?Math.round(m.nF/m.nS*1000)/10:0, oP=m.oS?Math.round(m.oF/m.oS*1000)/10:0;
+    var mx=Math.max(nP,oP)||1; function w(v){return Math.max(v/mx*88,4)}
+    var d=Math.round((nP-oP)*10)/10,cls=d>=0?"up":"down",ar=d>=0?"▲":"▼";
+    return '<div class="cmp"><div class="cmp-l">'+m.s+'</div>'+
+      '<div class="cmp-row"><span class="cmp-t n">New</span><div class="cmp-track"><div class="cmp-f n" style="width:'+w(nP)+'%"></div></div><span class="cmp-v">'+nP+'%</span></div>'+
+      '<div class="cmp-row"><span class="cmp-t o">Old</span><div class="cmp-track"><div class="cmp-f o" style="width:'+w(oP)+'%"></div></div><span class="cmp-v">'+oP+'%</span></div>'+
+      '<div class="cmp-d '+cls+'">'+ar+' '+(d>=0?"+":"")+d+'pp (new vs old)</div></div>';}).join(""); }
+  function renderVerdict(){
+    function card(v,horiz){
+      var d=Math.round((v.n-v.o)*10)/10,ar=d>0?"▲":d<0?"▼":"–",dc=d>0?"var(--good)":d<0?"var(--crit)":"var(--faint)";
+      return '<div class="vcard'+(horiz?" vcard-h":"")+'"><div class="vl">'+v.l+'</div>'+
+        '<div class="vrow"><span class="vnew">'+v.n+'%</span></div>'+
+        '<div class="vsub">vs old <b>'+v.o+'%</b> · <span style="color:'+dc+'">'+ar+' '+(d>0?"+":"")+d+'pp</span></div></div>';
+    }
+    document.getElementById("verdictForm").innerHTML=card(VERDICT[0],true);
+    document.getElementById("verdictMql").innerHTML=VERDICT.slice(1).map(function(v){return card(v,false);}).join("");
+  }
+  function renderQuiz(){var mx=Math.max.apply(null,QUIZ.map(function(q){return q.v}));document.getElementById("quiz").innerHTML=QUIZ.map(function(q){var pc=(q.v/QTOT*100).toFixed(0);
+    return '<div class="hb"><div class="hb-t"><span class="n'+(q.k?" k":"")+'">'+q.n+'</span><span class="v">'+q.v+' · '+pc+'%</span></div><div class="hb-track"><div class="hb-f '+q.c+'" style="width:'+(q.v/mx*100)+'%"></div></div></div>';}).join(""); }
+  function renderNcf(){document.getElementById("ncf").innerHTML=NCF.map(function(c){function td(v){return v===0?'<td class="z">0</td>':'<td>'+v+'</td>';}var opr=c.d?Math.round(c.o/c.d*100):0;
+    return '<tr><td class="cn">'+c.n+'<small>#'+c.id+'</small></td>'+td(c.d)+'<td>'+(c.o===0?'<span class="z">0</span>':c.o+' <span style="color:var(--faint)">'+opr+'%</span>')+'</td>'+td(c.c)+'</tr>';}).join(""); }
+  function renderGaps(){document.getElementById("gaps").innerHTML=GAPS.map(function(g){return '<span class="gchip" data-tip="'+g.t.replace(/"/g,"&quot;")+'"><span class="gd '+g.s+'"></span>'+g.h+'</span>';}).join(""); }
+
+  var cv=document.getElementById("chart"),ctx=cv.getContext("2d");
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  var VIEWS={
+    funnel:{pct:false,sub:"Per day: how many <b>open</b> the quiz form and <b>complete</b> it (lines), and how many <b>start a trial</b> (bars, right-hand scale).",series:[
+      {k:"op",l:"Form opens",c:"--info",t:"line",ax:"L"},
+      {k:"ld",l:"Form completes",c:"--accent",t:"line",ax:"L"},
+      {k:"tr",l:"Trials",c:"--warn",t:"bar",ax:"R"}]},
+    act:{pct:false,sub:"Per day: <b>trials started</b> and <b>consults booked</b> — both from the business DB (real, test-excluded).",series:[
+      {k:"tr",l:"Trials",c:"--accent",t:"bar",ax:"L"},
+      {k:"bk",l:"Bookings",c:"--info",t:"bar",ax:"L"}]},
+    qr:{pct:true,sub:"Per day: the <b>% of quiz completers who are eligible</b> — the MQL rate over time.",series:[{k:"qr",l:"Qualification %",c:"--accent",t:"line",ax:"L"}]}
+  };
+  function chartVal(i,key){
+    if(S.flow==="both"){var nn=TREND[i].n,oo=TREND[i].o;
+      if(key==="qr"){var L=nn.ld+oo.ld;return L?(nn.el+oo.el)/L*100:0;}
+      return (nn[key]||0)+(oo[key]||0);}
+    var x=TREND[i][S.flow]||TREND[i].n;
+    return key==="qr"?(x.ld?x.el/x.ld*100:0):(x[key]||0);}
+  function drawChart(){var a=S.from,b=S.to,n=b-a+1,dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=210;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+    var view=VIEWS[S.metric]||VIEWS.funnel,isQr=view.pct;
+    var hasR=view.series.some(function(s){return s.ax==="R";});
+    var pL=36,pR=hasR?34:12,pT=10,pB=22,w=W-pL-pR,h=H-pT-pB;
+    function X(i){return pL+(n<=1?0:w*(i-a)/(n-1));}
+    function axMax(ax){var m=0;view.series.forEach(function(s){if((s.ax||"L")===ax){for(var i=a;i<=b;i++)m=Math.max(m,chartVal(i,s.k));}});return m;}
+    var mxL=axMax("L");if(isQr)mxL=Math.max(mxL,50);mxL=(mxL||1)*1.12;
+    var mxR=Math.max(axMax("R"),1)*1.3;
+    ctx.font="10px "+(css("--mono").split(",")[0]||"monospace");ctx.lineWidth=1;ctx.textAlign="left";
+    ctx.strokeStyle=css("--line");ctx.fillStyle=css("--faint");
+    for(var g=0;g<=3;g++){var yy=pT+h-h*g/3;ctx.beginPath();ctx.moveTo(pL,yy);ctx.lineTo(W-pR,yy);ctx.stroke();ctx.fillText(isQr?Math.round(mxL*g/3)+"%":Math.round(mxL*g/3),4,yy+3);}
+    if(hasR){ctx.textAlign="right";ctx.fillStyle=css("--warn");for(var g2=0;g2<=3;g2++){var yr=pT+h-h*g2/3;ctx.fillText(Math.round(mxR*g2/3),W-3,yr+3);}ctx.textAlign="left";}
+    var bars=view.series.filter(function(s){return s.t==="bar";});
+    var slot=(n<=1?w:w/(n-1)),bw=Math.min(slot*0.55,16);
+    ctx.globalAlpha=0.55;
+    bars.forEach(function(s,bi){var mx=s.ax==="R"?mxR:mxL;ctx.fillStyle=css(s.c);for(var i=a;i<=b;i++){var v=chartVal(i,s.k);if(!v)continue;var bh=h*v/mx,off=bars.length>1?(bi-(bars.length-1)/2)*(bw+2):0;ctx.fillRect(X(i)-bw/2+off,pT+h-bh,bw,bh);}});
+    ctx.globalAlpha=1;
+    view.series.forEach(function(s){if(s.t!=="line")return;var mx=s.ax==="R"?mxR:mxL;ctx.strokeStyle=css(s.c);ctx.lineWidth=2.2;ctx.beginPath();for(var i=a;i<=b;i++){var xx=X(i),yy=pT+h-h*chartVal(i,s.k)/mx;(i>a)?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();var ey=pT+h-h*chartVal(b,s.k)/mx;ctx.fillStyle=css(s.c);ctx.beginPath();ctx.arc(X(b),ey,3,0,7);ctx.fill();});
+    var mono=(css("--mono").split(",")[0]||"sans-serif");
+    var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var MC=[css("--info"),css("--warn"),css("--accent"),css("--crit"),css("--good")];
+    var monthColor={},ci=0;
+    for(var xk=a;xk<=b;xk++){var mk=TREND[xk].d.slice(0,2);if(!(mk in monthColor)){monthColor[mk]=MC[ci%MC.length];ci++;}}
+    ctx.textAlign="center";ctx.font="9px "+mono;
+    var step=Math.max(1,Math.ceil(n/16));
+    for(var xi=a;xi<=b;xi++){if((xi-a)%step===0||xi===b){ctx.fillStyle=monthColor[TREND[xi].d.slice(0,2)];ctx.fillText(String(parseInt(TREND[xi].d.slice(3),10)),X(xi),H-13);}}
+    ctx.font="bold 9px "+mono;
+    function drawMon(s,e,mm){ctx.fillStyle=monthColor[mm];ctx.fillText(MON[parseInt(mm,10)-1]||mm,(X(s)+X(e))/2,H-2);}
+    var ms=a,mc=TREND[a].d.slice(0,2);
+    for(var xj=a+1;xj<=b;xj++){var mj=TREND[xj].d.slice(0,2);if(mj!==mc){drawMon(ms,xj-1,mc);ms=xj;mc=mj;}}
+    drawMon(ms,b,mc);
+    ctx.textAlign="left";ctx.font="9px "+mono;
+    document.getElementById("chartSub").innerHTML=view.sub;
+    document.getElementById("chartLegend").innerHTML=view.series.map(function(s){var sq=s.t==="bar"?';width:9px;height:9px;border-radius:2px':'';return '<span><i style="background:var('+s.c+')'+sq+'"></i>'+s.l+(s.ax==="R"?' <small style="color:var(--faint)">· right axis</small>':'')+'</span>';}).join("")+'<span style="margin-left:auto;color:var(--faint)">'+(b-a+1)+' days shown</span>';}
+
+  function setDates(){document.getElementById("from").value=fullDate(S.from);document.getElementById("to").value=fullDate(S.to);document.getElementById("fromB").value=fullDate(S.fromB);document.getElementById("toB").value=fullDate(S.toB);}
+  function renderAll(){renderKpis();drawChart();}
+  function cP(){document.querySelectorAll('#presets [data-r]').forEach(function(x){x.setAttribute("aria-pressed","false");});}
+  document.querySelectorAll('#presets [data-r]').forEach(function(btn){btn.addEventListener("click",function(){cP();btn.setAttribute("aria-pressed","true");var r=btn.getAttribute("data-r");
+    if(r==="all")S.from=0;else if(r==="launch")S.from=(idxByDate["2026-07-20"]!=null?idxByDate["2026-07-20"]:LAST);else S.from=Math.max(0,LAST-parseInt(r,10)+1);S.to=LAST;setDates();renderAll();});});
+  document.getElementById("from").addEventListener("change",function(e){var i=idxByDate[e.target.value];if(i!=null){S.from=Math.min(i,S.to);cP();renderAll();}else setDates();});
+  document.getElementById("to").addEventListener("change",function(e){var i=idxByDate[e.target.value];if(i!=null){S.to=Math.max(i,S.from);cP();renderAll();}else setDates();});
+  document.getElementById("fromB").addEventListener("change",function(e){var i=idxByDate[e.target.value];if(i!=null){S.fromB=Math.min(i,S.toB);renderKpis();}else setDates();});
+  document.getElementById("toB").addEventListener("change",function(e){var i=idxByDate[e.target.value];if(i!=null){S.toB=Math.max(i,S.fromB);renderKpis();}else setDates();});
+  document.querySelectorAll('#metric [data-m]').forEach(function(btn){btn.addEventListener("click",function(){document.querySelectorAll('#metric [data-m]').forEach(function(x){x.setAttribute("aria-pressed","false");});btn.setAttribute("aria-pressed","true");S.metric=btn.getAttribute("data-m");drawChart();});});
+  document.getElementById("cmpToggle").addEventListener("change",function(e){S.cmp=e.target.checked;document.getElementById("periodB").classList.toggle("on",S.cmp);if(S.cmp&&S.toB===0){S.fromB=Math.max(0,S.from-(S.to-S.from)-1);S.toB=Math.max(0,S.from-1);setDates();}renderKpis();});
+
+  S.from=(idxByDate["2026-07-20"]!=null?idxByDate["2026-07-20"]:Math.max(0,LAST-11));S.to=LAST;S.fromB=Math.max(0,S.from-12);S.toB=Math.max(0,S.from-1);
+  ["from","to","fromB","toB"].forEach(function(id){var el=document.getElementById(id);el.min=fullDate(0);el.max=fullDate(LAST);});
+  // ===== Email campaigns tab =====
+  var EMAIL=[
+    {id:80,n:"Not Eligible (nurture)",tr:"Lead disqualified",sent:198,dl:198,o:84,c:24,cv:0,u:6},
+    {id:85,n:"Payment Recovery",tr:"Payment failed",sent:197,dl:157,o:38,c:27,cv:0,u:0},
+    {id:73,n:"Appointment & Medical Form",tr:"Qualified → booking + medical form",sent:110,dl:108,o:44,c:24,cv:18,u:0},
+    {id:83,n:"Welcome (eligible)",tr:"Eligible lead",sent:73,dl:71,o:26,c:7,cv:0,u:1},
+    {id:86,n:"Booking Recovery",tr:"No consult booked",sent:25,dl:23,o:6,c:0,cv:0,u:0},
+    {id:81,n:"Post Medical Form Confirmation",tr:"Medical form submitted",sent:29,dl:28,o:10,c:1,cv:0,u:0},
+    {id:87,n:"Profile Completion Recovery",tr:"Profile incomplete",sent:16,dl:16,o:3,c:1,cv:0,u:0},
+    {id:79,n:"No-show",tr:"Doctor Videocall No-show",sent:26,dl:26,o:8,c:6,cv:3,u:0},
+    {id:74,n:"Reschedule / Cancellation",tr:"Doctor Videocall Canceled",sent:15,dl:12,o:4,c:0,cv:2,u:0},
+    {id:75,n:"App Onboarding",tr:"First app login",sent:0,dl:0,o:0,c:0,cv:0,u:0},
+    {id:82,n:"Trial Pre-Renewal Reminder",tr:"Trial sub · waits ~27d",sent:0,dl:0,o:0,c:0,cv:0,u:0}];
+  function renderEmail(){
+    var T={sent:0,dl:0,o:0,c:0,cv:0,u:0}; EMAIL.forEach(function(e){for(var k in T)T[k]+=e[k];});
+    var oR=T.dl?(T.o/T.dl*100):0, cR=T.dl?(T.c/T.dl*100):0;
+    document.getElementById("emKpis").innerHTML=[
+      ["Delivered",T.dl.toLocaleString(),"of "+T.sent+" sent"],
+      ["Open rate",oR.toFixed(1)+"%","<b>"+T.o+"</b> opens"],
+      ["Click rate",cR.toFixed(1)+"%","<b>"+T.c+"</b> clicks"],
+      ["Conversions",T.cv.toLocaleString(),"across 11 automations"]
+    ].map(function(k){return '<div class="kpi"><div class="k-l">'+k[0]+'</div><div class="k-v">'+k[1]+'</div><div class="k-s">'+k[2]+'</div></div>';}).join("");
+    document.getElementById("emBody").innerHTML=EMAIL.map(function(e){
+      var oR=e.dl?Math.round(e.o/e.dl*100):0, cR=e.dl?Math.round(e.c/e.dl*100):0;
+      function rateCell(cls,rate,cnt){ if(e.dl===0)return '<td class="z">—</td>';
+        return '<td><span class="em-bar '+cls+'" style="width:'+Math.max(rate*0.5,2)+'px"></span><span class="rate">'+rate+'%</span> <span style="color:var(--faint)">'+cnt+'</span></td>'; }
+      var dlv=e.sent>0&&e.dl<e.sent?'<b>'+e.dl+'</b> <span class="em-warn">'+Math.round(e.dl/e.sent*100)+'%</span>':'<b>'+e.dl+'</b>';
+      return '<tr><td class="cn2">'+e.n+'<span class="em-trig">#'+e.id+' · '+e.tr+'</span></td>'+
+        '<td>'+(e.sent||'<span class="z">0</span>')+'</td><td>'+dlv+'</td>'+
+        rateCell("",oR,e.o)+rateCell("click",cR,e.c)+
+        '<td>'+(e.cv?'<b>'+e.cv+'</b>':'<span class="z">0</span>')+'</td>'+
+        '<td>'+(e.u?'<span class="em-warn">'+e.u+'</span>':'<span class="z">0</span>')+'</td></tr>';
+    }).join("");
+  }
+  document.querySelectorAll('.tabs [data-tab]').forEach(function(b){b.addEventListener("click",function(){
+    document.querySelectorAll('.tabs [data-tab]').forEach(function(x){x.setAttribute("aria-selected","false");});
+    b.setAttribute("aria-selected","true"); var t=b.getAttribute("data-tab");
+    document.getElementById("tabFunnel").hidden=t!=="funnel"; document.getElementById("tabEmail").hidden=t!=="email"; document.getElementById("tabSources").hidden=t!=="sources";
+    if(t==="funnel")drawChart();
+  });});
+
+  var SESS={trials:31,seen:17,scheduled:3,stuck:7,gone:4,unsub:8,unsubAfterDr:4,stNoshow:3,stNever:3,stCancel:1,nsRateN:30.4,nsRateO:17.1,toConsultN:1.6,toConsultO:3.9};
+  function renderSess(){
+    function tiles(arr){return arr.map(function(t){return '<div class="sess-tile'+(t[2]?" "+t[2]:"")+'"><div class="st-v">'+t[1]+'</div><div class="st-l">'+t[0]+'</div></div>';}).join("");}
+    document.getElementById("sessCount").textContent=SESS.trials;
+    var seenSub=SESS.seen-SESS.unsubAfterDr, notReached=SESS.stuck+SESS.gone;
+    var subsTotal=seenSub+SESS.scheduled+SESS.stuck, unsubTotal=SESS.unsubAfterDr+SESS.gone;
+    function leaf(cls,label,v,sub){var p=Math.round(v/SESS.trials*100);return '<div class="tleaf '+cls+'"><span class="lf-l">'+label+(sub?'<span class="lf-x">'+sub+'</span>':'')+'</span><span class="lf-v">'+v+'<span class="lf-p">'+p+'%</span></span></div>';}
+    function grp(pc,pl,pv,kids){return '<div class="tgroup"><div class="tparent '+pc+'"><span class="tp-v">'+pv+'</span><span class="tp-l">'+pl+'</span></div><div class="tkids">'+kids+'</div></div>';}
+    document.getElementById("sessTree").innerHTML=
+      grp("good","Reached the doctor",SESS.seen,
+        leaf("sub","Still subscribed",seenSub)+leaf("uns","Unsubscribed after the consult",SESS.unsubAfterDr))+
+      grp("sch","Consult scheduled",SESS.scheduled,
+        leaf("sub","Still subscribed · consult still to happen",SESS.scheduled))+
+      grp("bad","Never reached the doctor",notReached,
+        leaf("sub","Still subscribed — <b>at-risk</b>",SESS.stuck,SESS.stNoshow+" no-show · "+SESS.stNever+" never booked · "+SESS.stCancel+" cancelled consult")+
+        leaf("uns","Left — <b>unsubscribed, no doctor</b>",SESS.gone))+
+      '<div class="tree-sum2"><span class="ts s"><i></i><b>'+subsTotal+'</b> still subscribed · '+Math.round(subsTotal/SESS.trials*100)+'%</span>'+
+        '<span class="ts u"><i></i><b>'+unsubTotal+'</b> unsubscribed · '+Math.round(unsubTotal/SESS.trials*100)+'%</span></div>';
+    var M=[{l:"No-show rate",s:"of concluded consults · vs old",n:SESS.nsRateN,o:SESS.nsRateO,u:"%"},
+      {l:"Time to see the doctor",s:"signup → consult held · vs old",n:SESS.toConsultN,o:SESS.toConsultO,u:"d"}];
+    document.getElementById("sessTime").innerHTML=M.map(function(m){
+      var better=m.n<m.o, c=better?"var(--good)":"var(--crit)";
+      var lbl=m.u==="d"?(better?"Faster":"Slower"):(better?"Lower":"Higher");
+      var diff=Math.round((m.n-m.o)*10)/10;
+      return '<div class="vcard"><div class="vl">'+m.l+'</div>'+
+        '<div class="vrow"><span class="vnew">'+m.n+m.u+'</span><span class="vpill" style="color:'+c+';border-color:'+c+'">'+lbl+'</span></div>'+
+        '<div class="vsub">vs old <b>'+m.o+m.u+'</b> · '+(diff>0?"+":"")+diff+m.u+'</div>'+
+        '<div class="vnote">'+m.s+'</div></div>';
+    }).join("");
+  }
+  setDates();renderVerdict();renderFunnel();renderStep();renderQuiz();renderSess();renderEmail();renderAll();
+  window.addEventListener("resize",drawChart);
+  new MutationObserver(drawChart).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  if(window.matchMedia)window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",drawChart);
+})();
+</script>

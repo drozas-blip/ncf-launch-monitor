@@ -1,0 +1,8 @@
+# never commit secrets or local build output
+secrets.env
+.env
+*.env
+_site/
+__pycache__/
+*.pyc
+.DS_Store
