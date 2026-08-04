@@ -386,13 +386,15 @@
     var d=pp?Math.round((a-b)*10)/10:(b?Math.round((a-b)/b*1000)/10:0); return {t:(d>0?"▲ +":d<0?"▼ ":"– ")+d+(pp?"pp":"%"),c:d>0?"up":d<0?"down":"flat"}; }
 
   function renderKpis(){
-    // KPIs come from the funnel (Typeform / business DB) so they match the journey exactly · since launch
-    var opened=bfVal("Lead form opened"),leads=bfVal("Lead form completed"),elig=bfVal("↳ Eligible"),acc=bfVal("Account created");
+    // KPIs follow the selected date range · summed from the daily TREND series
+    // (leads/eligibles from Typeform, accounts from the business DB, opens = form page views).
+    var A=agg("n",S.from,S.to),rl=rangeLabel();
+    var opened=A.op,leads=A.ld,elig=A.el,acc=A.ac;
     var kp=[
-      ["Leads captured",leads.toLocaleString(),'<b>'+(opened?(leads/opened*100).toFixed(1):0)+'%</b> of opens'],
-      ["Qualification rate",(leads?Math.round(elig/leads*1000)/10:0)+'%','<b>'+elig+'</b> eligible'],
+      ["Leads captured",leads.toLocaleString(),rl],
+      ["Qualification rate",(leads?Math.round(elig/leads*1000)/10:0)+'%','<b>'+elig.toLocaleString()+'</b> eligible'],
       ["Accounts created",acc.toLocaleString(),'<b>'+(leads?Math.round(acc/leads*100):0)+'%</b> of leads'],
-      ["Lead form opened",opened.toLocaleString(),'since launch']];
+      ["Form opens",opened.toLocaleString(),rl]];
     document.getElementById("kpis").innerHTML=kp.map(function(k){
       return '<div class="kpi"><div class="k-l">'+k[0]+'</div><div class="k-v">'+k[1]+'</div><div class="k-s">'+k[2]+'</div></div>';}).join("");
   }
