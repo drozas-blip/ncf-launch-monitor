@@ -108,27 +108,35 @@ def funnel_db(mb):
 # accounts / trials / bookings per day, keyed by 'MM-DD'
 _TREND_DAILY_SQL = f"""
 with u as ({_NEWFLOW_U}),
+days as (select to_char(gs,'MM-DD') d from generate_series('{LAUNCH_DATE}'::date, current_date, '1 day') gs),
 acc as (select to_char(created_at,'MM-DD') d, count(*) c
         from users where landing_source='new_onboarding_flow' and type='patient'
-          and lower(email) not like '%{TEST_DOMAIN}' and created_at >= '{LAUNCH_DATE}'
-        group by 1),
+          and lower(email) not like '%{TEST_DOMAIN}' and created_at >= '{LAUNCH_DATE}' group by 1),
 tr as (select to_char(s.created_at,'MM-DD') d, count(distinct s.user_id) c
        from subscriptions s join u on u.id=s.user_id
        where s.trial_end_at is not null and s.created_at >= '{LAUNCH_DATE}' group by 1),
-bk as (select to_char(m.created_at,'MM-DD') d, count(distinct lower(m.user_email)) c
-       from meetings m join u on u.email=lower(m.user_email)
-       where m.created_at >= '{LAUNCH_DATE}' group by 1)
-select coalesce(acc.d,tr.d,bk.d) d,
-       coalesce(acc.c,0) ac, coalesce(tr.c,0) tr, coalesce(bk.c,0) bk
-from acc full join tr on tr.d=acc.d full join bk on bk.d=coalesce(acc.d,tr.d)
-order by 1
+-- count each user once, on the day of their FIRST meeting — reschedules create
+-- extra rows on later days, so a plain per-day distinct would sum above the total.
+bk as (select to_char(fd,'MM-DD') d, count(*) c from (
+         select lower(m.user_email) e, min(m.created_at) fd
+         from meetings m join u on u.email=lower(m.user_email)
+         where m.created_at >= '{LAUNCH_DATE}' group by 1) x group by 1),
+md as (select to_char(fd,'MM-DD') d, count(*) c from (
+         select lower(m.user_email) e, min(m.time) fd
+         from meetings m join u on u.email=lower(m.user_email)
+         where m.state='scheduled' and m.time < now() and m.user_no_show_at is null
+           and m.time >= '{LAUNCH_DATE}' group by 1) x group by 1)
+select days.d, coalesce(acc.c,0) ac, coalesce(tr.c,0) tr, coalesce(bk.c,0) bk, coalesce(md.c,0) md
+from days left join acc on acc.d=days.d left join tr on tr.d=days.d
+          left join bk on bk.d=days.d left join md on md.d=days.d
+order by days.d
 """
 
 
 def trend_db_daily(mb):
-    """Return {'MM-DD': {'ac':n,'tr':n,'bk':n}} for the new flow since launch."""
+    """Return {'MM-DD': {'ac','tr','bk','md'}} for the new flow since launch."""
     rows = mb.query(14, _TREND_DAILY_SQL)
-    return {r["d"]: {"ac": int(r["ac"]), "tr": int(r["tr"]), "bk": int(r["bk"])} for r in rows}
+    return {r["d"]: {"ac": int(r["ac"]), "tr": int(r["tr"]), "bk": int(r["bk"]), "md": int(r["md"])} for r in rows}
 
 
 # ----------------------------------------------------------- Mixpanel ---

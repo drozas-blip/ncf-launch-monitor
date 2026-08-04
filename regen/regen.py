@@ -159,31 +159,34 @@ def main():
         html = re.sub(r"(· new )\d+( · old 1379)",
                       lambda mm: mm.group(1) + str(quiz["eligible"]) + mm.group(2), html, count=1)
 
-    # 6) daily trend (TREND) — merge whatever daily sources succeeded
-    if opens_d or comp_d or trend_db:
-        od, cd, td = opens_d or {}, comp_d or {}, trend_db or {}
+    # 6) daily trend (TREND) — op (Mixpanel page views), ld/el (Typeform daily),
+    #    ac/tr/bk/md (business DB). So the range-summed funnel matches the totals.
+    qld = quiz["daily_ld"] if quiz else {}
+    qel = quiz["daily_el"] if quiz else {}
+    if opens_d or qld or trend_db:
+        od, td = opens_d or {}, trend_db or {}
         tm = re.search(r"(var TREND\s*=\s*)(\[.*?\])(;)", html, re.S)
         series = json.loads(tm.group(2))
         by_date = {e["d"]: e for e in series}
-        for d in sorted(set(od) | set(cd) | set(td)):
+        for d in sorted(set(od) | set(qld) | set(td)):
             if d < LAUNCH_MMDD:
                 continue
             e = by_date.get(d)
             if e is None:
-                e = {"d": d, "o": {"op": 0, "ld": 0, "el": 0, "ac": 0, "acR": 0, "tr": 0, "bk": 0},
-                     "n": {"op": 0, "ld": 0, "el": 0, "ac": 0, "acR": 0, "tr": 0, "bk": 0}}
+                z = {"op": 0, "ld": 0, "el": 0, "ac": 0, "acR": 0, "tr": 0, "bk": 0, "md": 0}
+                e = {"d": d, "o": dict(z), "n": dict(z)}
                 series.append(e)
                 by_date[d] = e
             upd = {}
             if od:
                 upd["op"] = od.get(d, 0)
-            if cd:
-                ld = cd.get(d, 0)
-                upd["ld"] = ld
-                if elig_rate:
-                    upd["el"] = round(ld * elig_rate)
+            if qld:
+                upd["ld"] = qld.get(d, 0)
+            if qel:
+                upd["el"] = qel.get(d, 0)
             if d in td:
-                upd.update(ac=td[d].get("ac", 0), tr=td[d].get("tr", 0), bk=td[d].get("bk", 0))
+                upd.update(ac=td[d].get("ac", 0), tr=td[d].get("tr", 0),
+                           bk=td[d].get("bk", 0), md=td[d].get("md", 0))
             e["n"].update(upd)
         series.sort(key=lambda e: e["d"])
         trend_lit = tm.group(1) + json.dumps(series, separators=(",", ":"), ensure_ascii=False) + tm.group(3)
