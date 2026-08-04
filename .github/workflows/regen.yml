@@ -3,7 +3,8 @@ name: regen-and-deploy
 # Rebuilds the dashboard data from the live sources and deploys to GitHub Pages.
 on:
   schedule:
-    - cron: "0 6 * * *"      # daily ~08:00 CEST (06:00 UTC)
+    - cron: "23 6 * * *"     # 06:23 UTC ≈ 08:23 CEST — off the top of the hour (less delay)
+    - cron: "23 11 * * *"    # 11:23 UTC ≈ 13:23 CEST — midday safety net if the morning run is dropped
   workflow_dispatch: {}       # allow manual runs from the Actions tab
   push:
     branches: [main]          # redeploy on layout/code changes
