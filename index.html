@@ -167,6 +167,10 @@
   .tree-sum2{display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:3px;padding-top:11px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
   .tree-sum2 .ts{display:flex;align-items:center;gap:7px} .tree-sum2 .ts b{color:var(--ink);font-variant-numeric:tabular-nums}
   .tree-sum2 .ts i{width:9px;height:9px;border-radius:2px;display:inline-block} .tree-sum2 .ts.s i{background:var(--good)} .tree-sum2 .ts.u i{background:var(--crit)}
+  .tree-sum3{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px;padding-top:14px;border-top:1px solid var(--line)} @media(max-width:520px){.tree-sum3{grid-template-columns:1fr}}
+  .ts3{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 15px} .ts3.s{border-left:3px solid var(--good)} .ts3.u{border-left:3px solid var(--crit)}
+  .ts3-v{font-size:2rem;font-weight:680;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1} .ts3.s .ts3-v{color:var(--good)} .ts3.u .ts3-v{color:var(--crit)}
+  .ts3-v .ts3-p{font-size:1rem;color:var(--muted);font-weight:600;margin-left:9px} .ts3-l{font-size:12.5px;color:var(--muted);margin-top:6px}
   @media(max-width:560px){.tparent{flex:0 0 100%} .tkids{flex:1 1 100%;padding-left:16px;margin-top:7px}}
 </style>
 
@@ -248,6 +252,13 @@
       <span class="info" data-tip="The trial cohort (users who started a free trial), grouped by whether they've reached the doctor. No-show rate & time-to-doctor are vs old (May–June 2026).">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · <span id="sessCount"></span> trials · DB</span></div>
     <div id="sessTree" class="tree"></div>
+  </div>
+
+  <!-- 5b. TRIAL COHORT vs OLD (analysis) -->
+  <div class="card" data-view="analysis">
+    <div class="card-h"><div class="lft"><h2>Trial cohort vs old — speed &amp; no-shows</h2>
+      <span class="info" data-tip="No-show rate and time-to-doctor for the new-flow trials, compared with the old flow (May–June 2026).">i</span></div>
+      <span class="baseline">NEW vs OLD · MAY–JUNE 2026</span></div>
     <div id="sessTime" class="sess-time"></div>
   </div>
 
@@ -601,8 +612,10 @@
       grp("bad","Never reached the doctor",notReached,
         leaf("sub","Still subscribed — <b>at-risk</b>",SESS.stuck,SESS.stNoshow+" no-show · "+SESS.stNever+" never booked · "+SESS.stCancel+" cancelled consult")+
         leaf("uns","Left — <b>unsubscribed, no doctor</b>",SESS.gone))+
-      '<div class="tree-sum2"><span class="ts s"><i></i><b>'+subsTotal+'</b> still subscribed · '+Math.round(subsTotal/SESS.trials*100)+'%</span>'+
-        '<span class="ts u"><i></i><b>'+unsubTotal+'</b> unsubscribed · '+Math.round(unsubTotal/SESS.trials*100)+'%</span></div>';
+      '<div class="tree-sum3">'+
+        '<div class="ts3 s"><div class="ts3-v">'+subsTotal+'<span class="ts3-p">'+Math.round(subsTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">still subscribed</div></div>'+
+        '<div class="ts3 u"><div class="ts3-v">'+unsubTotal+'<span class="ts3-p">'+Math.round(unsubTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">unsubscribed</div></div>'+
+      '</div>';
     var M=[{l:"No-show rate",s:"of concluded consults · vs old",n:SESS.nsRateN,o:SESS.nsRateO,u:"%"},
       {l:"Time to see the doctor",s:"signup → consult held · vs old",n:SESS.toConsultN,o:SESS.toConsultO,u:"d"}];
     document.getElementById("sessTime").innerHTML=M.map(function(m){
