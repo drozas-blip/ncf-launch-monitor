@@ -177,7 +177,7 @@
 <div class="wrap">
   <div class="topbar">
     <div class="tb-left"><h1>New Onboarding Flow — Launch Monitor</h1></div>
-    <span class="live" id="lastUpdated"><span class="dot"></span>Last updated <b>4 Aug 2026</b> · 21:14 CEST</span>
+    <span class="live" id="lastUpdated"><span class="dot"></span>Last updated <b>4 Aug 2026</b> · 21:22 CEST</span>
   </div>
 
   <div class="tabs" role="tablist">
@@ -337,7 +337,7 @@
       {n:"↳ Eligible",v:604,bref:"Lead form completed",bl:"completed",sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
       {n:"↳ Not eligible",v:621,bref:"Lead form completed",bl:"completed",sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
     {s:"Registration → account",steps:[
-      {n:"Registration started",v:651,bref:"Lead form completed",bl:"completed",d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
+      {n:"Registration started",v:652,bref:"Lead form completed",bl:"completed",d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
       {n:"↳ email — reached OTP",v:317,bref:"Registration started",bl:"reg. started",sub:1,d:"OTP code sent (email sign-ups only)"},
       {n:"↳ email — OTP verified",v:261,bref:"↳ email — reached OTP",bl:"OTP sent",sub:1,d:"Entered the code correctly"},
       {n:"↳ Google sign-in (skips OTP)",v:127,bref:"Registration started",bl:"reg. started",sub:1,d:"Derived: Mixpanel 'registration completed' − OTP-verified. Name comes from Google — no OTP."},
@@ -360,7 +360,7 @@
   var QUIZ=[{n:"Eligible ✓",v:604,c:"g"},{n:"BMI < 27",v:407,c:"c",k:1},{n:"BMI 27–29, no comorbidity",v:103,c:"c",k:1},{n:"Contraindication",v:90,c:"w"},{n:"Under 18",v:7,c:"w"},{n:"Pregnant / breastfeeding",v:14,c:"w"}]; var QTOT=1225;
   var STEPX=[
     {s:"Quiz — opened → completed",src:"Typeform",nS:1711,nF:1225,oS:55292,oF:22176},
-    {s:"Registration — started → account",src:"Mixpanel + DB",nS:651,nF:325,oS:1253,oF:546,dir:1},
+    {s:"Registration — started → account",src:"Mixpanel + DB",nS:652,nF:325,oS:1253,oF:546,dir:1},
     {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:317,nF:261,oS:263,oF:193,sub:1},
     {s:"Name — started → completed",src:"Mixpanel · email route",nS:142,nF:116,oS:198,oF:182,sub:1}];
   var VERDICT=[
