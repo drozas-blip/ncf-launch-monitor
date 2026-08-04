@@ -103,6 +103,7 @@
   .fnl{width:100%;height:auto;display:block;margin-top:4px} .fnl text{dominant-baseline:auto}
   .fnl-lbl{fill:var(--muted);font:600 12px var(--sans)} .fnl-hero{fill:var(--ink);font:700 29px var(--sans);letter-spacing:-.02em}
   .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)} .fnl-pend{fill:var(--faint);font:italic 400 11.5px var(--sans)}
+  #tabFunnel{display:flex;flex-direction:column}
   #tabFunnel[data-view="overview"] [data-view="analysis"]{display:none} #tabFunnel[data-view="analysis"] [data-view="overview"]{display:none}
   .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -189,9 +190,9 @@
     <div class="seg" id="presets" role="group" aria-label="Presets">
       <button data-r="7">7D</button><button data-r="30">30D</button>
       <button data-r="launch" aria-pressed="true">Launch</button><button data-r="all">All</button></div>
-    <div class="sep"></div>
-    <label class="toggle"><input type="checkbox" id="cmpToggle">Compare periods</label>
-    <div class="pB" id="periodB"><span class="mono" style="font-size:10px;color:var(--muted)">vs</span>
+    <span class="mono" style="font-size:11px;color:var(--faint);margin-left:auto">date range controls the chart below</span>
+    <label class="toggle" style="display:none"><input type="checkbox" id="cmpToggle">Compare periods</label>
+    <div class="pB" id="periodB" style="display:none"><span class="mono" style="font-size:10px;color:var(--muted)">vs</span>
       <div class="ctl"><label>B from</label><input type="date" id="fromB"></div><div class="ctl"><label>B to</label><input type="date" id="toB"></div></div>
   </div>
 
@@ -199,7 +200,7 @@
 
   <!-- 0. JOURNEY FUNNEL — summary hero -->
   <div class="card" data-view="overview">
-    <div class="card-h"><div class="lft"><h2>The journey — lead → doctor</h2>
+    <div class="card-h"><div class="lft"><h2>The journey — lead → subscription</h2>
       <span class="info" data-tip="New flow since launch. Each stage as a share of the leads who filled the form. Paid subscription (trial→paid) is measured later (~20 Aug), so the funnel ends at the consult.">i</span></div>
       <span class="baseline">NEW FLOW · SINCE LAUNCH · % OF LEADS</span></div>
     <div id="funnelHero"></div>
@@ -223,7 +224,7 @@
   </div>
 
   <!-- 3. DAILY FUNNEL -->
-  <div class="card" data-view="overview">
+  <div class="card" data-view="overview" style="order:2">
     <div class="chart-top"><div class="lft"><h2>Daily funnel — new flow</h2>
       <span class="info" data-tip="New-flow volume per day since launch. See the Sources tab for where each line comes from.">i</span></div>
       <div class="seg" id="metric" role="group" aria-label="View"><button data-m="funnel" aria-pressed="true">Funnel</button><button data-m="act">Activation</button><button data-m="qr">Quality %</button></div></div>
@@ -243,7 +244,7 @@
 
   <!-- 5. TRIAL COHORT (new only) -->
   <div class="card" data-view="overview">
-    <div class="card-h"><div class="lft"><h2>Trial cohort — reaching the doctor</h2>
+    <div class="card-h"><div class="lft"><h2>↳ Inside the trials — who reaches the doctor, who drops</h2>
       <span class="info" data-tip="The trial cohort (users who started a free trial), grouped by whether they've reached the doctor. No-show rate & time-to-doctor are vs old (May–June 2026).">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · <span id="sessCount"></span> trials · DB</span></div>
     <div id="sessTree" class="tree"></div>
@@ -379,16 +380,15 @@
     var d=pp?Math.round((a-b)*10)/10:(b?Math.round((a-b)/b*1000)/10:0); return {t:(d>0?"▲ +":d<0?"▼ ":"– ")+d+(pp?"pp":"%"),c:d>0?"up":d<0?"down":"flat"}; }
 
   function renderKpis(){
-    var A=agg(S.flow,S.from,S.to);
-    var defs=[["Leads captured","ld",function(x){return x.ld}],["Qualification rate","qr",function(x){return x.ld?Math.round(x.el/x.ld*1000)/10:0}],
-      ["Accounts created","ac",function(x){return x.ac}],["Lead form opened","op",function(x){return x.op}]];
-    document.getElementById("kpis").innerHTML=defs.map(function(D){
-      var isRate=D[1]==="qr",va=D[2](A);
-      if(!S.cmp){ var s=D[1]==="ld"?("<b>"+(A.op?(A.ld/A.op*100).toFixed(1):0)+"%</b> of opens"):D[1]==="qr"?("<b>"+A.el+"</b> eligible"):D[1]==="ac"?("<b>"+(A.ld?(A.ac/A.ld*100).toFixed(0):0)+"%</b> of leads"):"in range";
-        return '<div class="kpi"><div class="k-l">'+D[0]+'</div><div class="k-v">'+(isRate?va+"%":va.toLocaleString())+'</div><div class="k-s">'+s+'</div></div>'; }
-      var B=agg(S.flow,S.fromB,S.toB),vb=D[2](B),dl=fmtDelta(va,vb,isRate);
-      return '<div class="kpi"><div class="k-l">'+D[0]+'</div><div class="k-cmp"><span class="a">'+(isRate?va+"%":va.toLocaleString())+'</span><span class="b">B '+(isRate?vb+"%":vb.toLocaleString())+'</span><span class="d '+dl.c+'">'+dl.t+'</span></div><div class="k-s">A vs B</div></div>';
-    }).join("");
+    // KPIs come from the funnel (Typeform / business DB) so they match the journey exactly · since launch
+    var opened=bfVal("Lead form opened"),leads=bfVal("Lead form completed"),elig=bfVal("↳ Eligible"),acc=bfVal("Account created");
+    var kp=[
+      ["Leads captured",leads.toLocaleString(),'<b>'+(opened?(leads/opened*100).toFixed(1):0)+'%</b> of opens'],
+      ["Qualification rate",(leads?Math.round(elig/leads*1000)/10:0)+'%','<b>'+elig+'</b> eligible'],
+      ["Accounts created",acc.toLocaleString(),'<b>'+(leads?Math.round(acc/leads*100):0)+'%</b> of leads'],
+      ["Lead form opened",opened.toLocaleString(),'since launch']];
+    document.getElementById("kpis").innerHTML=kp.map(function(k){
+      return '<div class="kpi"><div class="k-l">'+k[0]+'</div><div class="k-v">'+k[1]+'</div><div class="k-s">'+k[2]+'</div></div>';}).join("");
   }
   function bfVal(name){for(var i=0;i<BF.length;i++){for(var j=0;j<BF[i].steps.length;j++){if(BF[i].steps[j].n===name)return BF[i].steps[j].v;}}return 0;}
   function renderFunnelHero(){
