@@ -208,7 +208,7 @@
       <span class="info" data-tip="New flow since launch. Each stage as a share of the leads who filled the form. Paid subscription (trial→paid) is measured later (~20 Aug), so the funnel ends at the consult.">i</span></div>
       <span class="baseline">NEW FLOW · SINCE LAUNCH · % OF LEADS</span></div>
     <div id="funnelHero"></div>
-    <p class="card-sub" style="margin:14px 0 0">The last step — <b>trial → paid subscription</b> — only becomes measurable from ~20 Aug (shown pending). Of the trials, some have already churned — see the <b>Trial cohort</b> below for who's still in and who dropped.</p>
+    <p class="card-sub" style="margin:14px 0 0">The last step — <b>trial → paid subscription</b> — only becomes measurable from ~20 Aug (shown pending). Of the trials, some have already churned — see the <b>Trial cohort</b> in the <b>Analysis</b> tab for who's still in and who dropped.</p>
   </div>
 
   <!-- 1. NEW VS OLD — one block: form completion → step completion → activation -->
@@ -246,22 +246,13 @@
     <div id="bigfunnel"></div>
   </div>
 
-  <!-- 5. TRIAL COHORT (new only) -->
-  <div class="card" data-view="overview">
-    <div class="card-h"><div class="lft"><h2>↳ Inside the trials — who reaches the doctor, who drops</h2>
-      <span class="info" data-tip="The trial cohort (users who started a free trial), grouped by whether they've reached the doctor. No-show rate & time-to-doctor are vs old (May–June 2026).">i</span></div>
+  <!-- 5. TRIAL COHORT — full detail (analysis) -->
+  <div class="card" data-view="analysis">
+    <div class="card-h"><div class="lft"><h2>Trial cohort — the trials, up close</h2>
+      <span class="info" data-tip="The new-flow trials, grouped by whether they reached the doctor and whether they're still subscribed — plus no-show rate and time-to-doctor vs the old flow (May–June 2026).">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · <span id="sessCount"></span> trials · DB</span></div>
     <div id="sessTree" class="tree"></div>
-  </div>
-
-  <!-- 5b. TRIAL COHORT — retention & vs-old quality (analysis) -->
-  <div class="card" data-view="analysis">
-    <div class="card-h"><div class="lft"><h2>Trial cohort — retention &amp; pace</h2>
-      <span class="info" data-tip="Of the new-flow trials: how many are still in vs dropped out, plus no-show rate and time-to-doctor compared with the old flow (May–June 2026).">i</span></div>
-      <span class="baseline">NEW · vs OLD ON NO-SHOW &amp; TIME</span></div>
-    <div class="cmp-subhead" style="margin-bottom:10px">Still in trial vs dropped out</div>
-    <div id="sessRetain" class="tree-sum3" style="margin-top:0;border-top:none;padding-top:0"></div>
-    <div class="cmp-subhead" style="margin:18px 0 10px">No-show &amp; speed · vs old</div>
+    <div class="cmp-subhead" style="margin:18px 0 10px">No-show &amp; speed · vs old (May–June 2026)</div>
     <div id="sessTime" class="sess-time"></div>
   </div>
 
@@ -619,10 +610,6 @@
         '<div class="ts3 s"><div class="ts3-v">'+subsTotal+'<span class="ts3-p">'+Math.round(subsTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">still subscribed</div></div>'+
         '<div class="ts3 u"><div class="ts3-v">'+unsubTotal+'<span class="ts3-p">'+Math.round(unsubTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">unsubscribed</div></div>'+
       '</div>';
-    var retain=document.getElementById("sessRetain");
-    if(retain) retain.innerHTML=
-      '<div class="ts3 s"><div class="ts3-v">'+subsTotal+'<span class="ts3-p">'+Math.round(subsTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">still in trial</div></div>'+
-      '<div class="ts3 u"><div class="ts3-v">'+unsubTotal+'<span class="ts3-p">'+Math.round(unsubTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">dropped out</div></div>';
     var M=[{l:"No-show rate",s:"of concluded consults · vs old",n:SESS.nsRateN,o:SESS.nsRateO,u:"%"},
       {l:"Time to see the doctor",s:"signup → consult held · vs old",n:SESS.toConsultN,o:SESS.toConsultO,u:"d"}];
     document.getElementById("sessTime").innerHTML=M.map(function(m){
