@@ -100,6 +100,9 @@
   .foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
   .verdict-card{border-left:3px solid var(--accent)}
   .baseline{font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:100px;padding:4px 11px;white-space:nowrap}
+  .fnl{width:100%;height:auto;display:block;margin-top:4px} .fnl text{dominant-baseline:auto}
+  .fnl-lbl{fill:var(--muted);font:600 12px var(--sans)} .fnl-hero{fill:var(--ink);font:700 29px var(--sans);letter-spacing:-.02em}
+  .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)}
   .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   .src-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted);line-height:1.45;text-align:left} .src-table tr:last-child td{border-bottom:0}
@@ -191,6 +194,15 @@
   </div>
 
   <div class="kpis" id="kpis"></div>
+
+  <!-- 0. JOURNEY FUNNEL — summary hero -->
+  <div class="card">
+    <div class="card-h"><div class="lft"><h2>The journey — lead → doctor</h2>
+      <span class="info" data-tip="New flow since launch. Each stage as a share of the leads who filled the form. Paid subscription (trial→paid) is measured later (~20 Aug), so the funnel ends at the consult.">i</span></div>
+      <span class="baseline">NEW FLOW · SINCE LAUNCH · % OF LEADS</span></div>
+    <div id="funnelHero"></div>
+    <p class="card-sub" style="margin:14px 0 0">The eventual goal — <b>trial → paid subscription</b> — only becomes measurable from ~20 Aug, so the funnel ends at the completed consult for now.</p>
+  </div>
 
   <!-- 1. NEW VS OLD — one block: form completion → step completion → activation -->
   <div class="card verdict-card">
@@ -373,6 +385,32 @@
       var B=agg(S.flow,S.fromB,S.toB),vb=D[2](B),dl=fmtDelta(va,vb,isRate);
       return '<div class="kpi"><div class="k-l">'+D[0]+'</div><div class="k-cmp"><span class="a">'+(isRate?va+"%":va.toLocaleString())+'</span><span class="b">B '+(isRate?vb+"%":vb.toLocaleString())+'</span><span class="d '+dl.c+'">'+dl.t+'</span></div><div class="k-s">A vs B</div></div>';
     }).join("");
+  }
+  function bfVal(name){for(var i=0;i<BF.length;i++){for(var j=0;j<BF[i].steps.length;j++){if(BF[i].steps[j].n===name)return BF[i].steps[j].v;}}return 0;}
+  function renderFunnelHero(){
+    var FN=[
+      {l:"Lead — form filled",v:bfVal("Lead form completed")},
+      {l:"MQL — eligible",v:bfVal("↳ Eligible")},
+      {l:"Account created",v:bfVal("Account created")},
+      {l:"Trial started",v:bfVal("Trial started")},
+      {l:"Consult booked",v:bfVal("Booked a consult")},
+      {l:"Consult done",v:bfVal("Meeting done")}];
+    var max=FN[0].v||1,n=FN.length,W=1000,H=300,padL=118,padR=120,padT=32,padB=54;
+    var plotW=W-padL-padR,plotH=H-padT-padB,cy=padT+plotH/2;
+    function X(i){return padL+plotW*i/(n-1);}
+    function Hh(i){return Math.max(plotH*(FN[i].v/max),9);}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" class="fnl" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Journey funnel, new flow">';
+    for(var i=0;i<n-1;i++){var x0=X(i),x1=X(i+1),h0=Hh(i)/2,h1=Hh(i+1)/2,op=Math.round((1-i*0.135)*100)/100;
+      s+='<polygon points="'+x0+','+(cy-h0)+' '+x1+','+(cy-h1)+' '+x1+','+(cy+h1)+' '+x0+','+(cy+h0)+'" fill="var(--accent)" fill-opacity="'+op+'"/>';}
+    for(var i=0;i<n;i++){var x=X(i),pct=Math.round(FN[i].v/max*1000)/10;
+      s+='<line x1="'+x+'" y1="'+(padT-6)+'" x2="'+x+'" y2="'+(H-padB+10)+'" stroke="var(--line)" stroke-width="1"/>';
+      s+='<text x="'+(x+9)+'" y="'+(padT-13)+'" class="fnl-lbl">'+FN[i].l+'</text>';
+      if(i===0){ s+='<text x="6" y="'+(cy-3)+'" class="fnl-hero">'+FN[0].v.toLocaleString()+'</text>'+
+        '<text x="6" y="'+(cy+17)+'" class="fnl-sub">leads (100%)</text>'; }
+      else { s+='<text x="'+(x+9)+'" y="'+(H-padB+26)+'" class="fnl-pct">'+pct+'%</text>'+
+        '<text x="'+(x+9)+'" y="'+(H-padB+43)+'" class="fnl-cnt">'+FN[i].v.toLocaleString()+'</text>'; }}
+    s+='</svg>';
+    document.getElementById("funnelHero").innerHTML=s;
   }
   function renderFunnel(){
     document.getElementById("bigfunnel").innerHTML=BF.map(function(g){
@@ -565,7 +603,7 @@
         '<div class="vnote">'+m.s+'</div></div>';
     }).join("");
   }
-  setDates();renderVerdict();renderFunnel();renderStep();renderQuiz();renderSess();renderEmail();renderAll();
+  setDates();renderFunnelHero();renderVerdict();renderFunnel();renderStep();renderQuiz();renderSess();renderEmail();renderAll();
   window.addEventListener("resize",drawChart);
   new MutationObserver(drawChart).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   if(window.matchMedia)window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",drawChart);
