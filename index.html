@@ -102,7 +102,8 @@
   .baseline{font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:100px;padding:4px 11px;white-space:nowrap}
   .fnl{width:100%;height:auto;display:block;margin-top:4px} .fnl text{dominant-baseline:auto}
   .fnl-lbl{fill:var(--muted);font:600 12px var(--sans)} .fnl-hero{fill:var(--ink);font:700 29px var(--sans);letter-spacing:-.02em}
-  .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)}
+  .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)} .fnl-pend{fill:var(--faint);font:italic 400 11.5px var(--sans)}
+  #tabFunnel[data-view="overview"] [data-view="analysis"]{display:none} #tabFunnel[data-view="analysis"] [data-view="overview"]{display:none}
   .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   .src-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted);line-height:1.45;text-align:left} .src-table tr:last-child td{border-bottom:0}
@@ -175,13 +176,14 @@
   </div>
 
   <div class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" data-tab="funnel">Funnel</button>
+    <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-tab="analysis">Analysis</button>
     <button role="tab" aria-selected="false" data-tab="email">Email campaigns</button>
     <button role="tab" aria-selected="false" data-tab="sources">Sources</button>
   </div>
 
-  <div id="tabFunnel" class="tabpane">
-  <div class="controls">
+  <div id="tabFunnel" class="tabpane" data-view="overview">
+  <div class="controls" data-view="overview">
     <div class="ctl"><label>From</label><input type="date" id="from"></div>
     <div class="ctl"><label>To</label><input type="date" id="to"></div>
     <div class="seg" id="presets" role="group" aria-label="Presets">
@@ -193,19 +195,19 @@
       <div class="ctl"><label>B from</label><input type="date" id="fromB"></div><div class="ctl"><label>B to</label><input type="date" id="toB"></div></div>
   </div>
 
-  <div class="kpis" id="kpis"></div>
+  <div class="kpis" id="kpis" data-view="overview"></div>
 
   <!-- 0. JOURNEY FUNNEL — summary hero -->
-  <div class="card">
+  <div class="card" data-view="overview">
     <div class="card-h"><div class="lft"><h2>The journey — lead → doctor</h2>
       <span class="info" data-tip="New flow since launch. Each stage as a share of the leads who filled the form. Paid subscription (trial→paid) is measured later (~20 Aug), so the funnel ends at the consult.">i</span></div>
       <span class="baseline">NEW FLOW · SINCE LAUNCH · % OF LEADS</span></div>
     <div id="funnelHero"></div>
-    <p class="card-sub" style="margin:14px 0 0">The eventual goal — <b>trial → paid subscription</b> — only becomes measurable from ~20 Aug, so the funnel ends at the completed consult for now.</p>
+    <p class="card-sub" style="margin:14px 0 0">The last step — <b>trial → paid subscription</b> — only becomes measurable from ~20 Aug (shown pending). Of the trials, some have already churned — see the <b>Trial cohort</b> below for who's still in and who dropped.</p>
   </div>
 
   <!-- 1. NEW VS OLD — one block: form completion → step completion → activation -->
-  <div class="card verdict-card">
+  <div class="card verdict-card" data-view="analysis">
     <div class="card-h"><div class="lft"><h2>Is the new flow working? — new vs old</h2>
       <span class="info" data-tip="New vs old on reliable, matched metrics — see the Sources tab for how each is measured.">i</span></div>
       <span class="baseline">OLD = MAY–JUNE 2026 · NEW = SINCE LAUNCH</span></div>
@@ -221,7 +223,7 @@
   </div>
 
   <!-- 3. DAILY FUNNEL -->
-  <div class="card">
+  <div class="card" data-view="overview">
     <div class="chart-top"><div class="lft"><h2>Daily funnel — new flow</h2>
       <span class="info" data-tip="New-flow volume per day since launch. See the Sources tab for where each line comes from.">i</span></div>
       <div class="seg" id="metric" role="group" aria-label="View"><button data-m="funnel" aria-pressed="true">Funnel</button><button data-m="act">Activation</button><button data-m="qr">Quality %</button></div></div>
@@ -231,7 +233,7 @@
   </div>
 
   <!-- 4. FULL FUNNEL -->
-  <div class="card">
+  <div class="card" data-view="analysis">
     <div class="card-h"><div class="lft"><h2>Full funnel — every step</h2>
       <span class="info" data-tip="Every step of the new flow since launch. ✓ real = from the business DB (test excluded); details on the Sources tab.">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · since launch · through 3 Aug · <b>click a row for details</b></span></div>
@@ -240,7 +242,7 @@
   </div>
 
   <!-- 5. TRIAL COHORT (new only) -->
-  <div class="card">
+  <div class="card" data-view="overview">
     <div class="card-h"><div class="lft"><h2>Trial cohort — reaching the doctor</h2>
       <span class="info" data-tip="The trial cohort (users who started a free trial), grouped by whether they've reached the doctor. No-show rate & time-to-doctor are vs old (May–June 2026).">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · <span id="sessCount"></span> trials · DB</span></div>
@@ -249,7 +251,7 @@
   </div>
 
   <!-- 6. ELIGIBILITY (new only) -->
-  <div class="card">
+  <div class="card" data-view="analysis">
     <div class="card-h"><div class="lft"><h2>Eligibility &amp; why leads filter out</h2>
       <span class="info" data-tip="Of quiz completers (Typeform, new flow): who's eligible, and why the rest aren't.">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · 1180 completers</span></div>
@@ -389,24 +391,29 @@
   function bfVal(name){for(var i=0;i<BF.length;i++){for(var j=0;j<BF[i].steps.length;j++){if(BF[i].steps[j].n===name)return BF[i].steps[j].v;}}return 0;}
   function renderFunnelHero(){
     var FN=[
-      {l:"Lead — form filled",v:bfVal("Lead form completed")},
-      {l:"MQL — eligible",v:bfVal("↳ Eligible")},
-      {l:"Account created",v:bfVal("Account created")},
-      {l:"Trial started",v:bfVal("Trial started")},
-      {l:"Consult booked",v:bfVal("Booked a consult")},
-      {l:"Consult done",v:bfVal("Meeting done")}];
+      {l:"Lead",v:bfVal("Lead form completed")},
+      {l:"MQL",v:bfVal("↳ Eligible")},
+      {l:"Account",v:bfVal("Account created")},
+      {l:"Trial",v:bfVal("Trial started")},
+      {l:"Booked",v:bfVal("Booked a consult")},
+      {l:"Attended",v:bfVal("Meeting done")},
+      {l:"Subscribed",v:0,pending:true}];
     var max=FN[0].v||1,n=FN.length,W=1000,H=300,padL=118,padR=120,padT=32,padB=54;
     var plotW=W-padL-padR,plotH=H-padT-padB,cy=padT+plotH/2;
     function X(i){return padL+plotW*i/(n-1);}
     function Hh(i){return Math.max(plotH*(FN[i].v/max),9);}
     var s='<svg viewBox="0 0 '+W+' '+H+'" class="fnl" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Journey funnel, new flow">';
-    for(var i=0;i<n-1;i++){var x0=X(i),x1=X(i+1),h0=Hh(i)/2,h1=Hh(i+1)/2,op=Math.round((1-i*0.135)*100)/100;
-      s+='<polygon points="'+x0+','+(cy-h0)+' '+x1+','+(cy-h1)+' '+x1+','+(cy+h1)+' '+x0+','+(cy+h0)+'" fill="var(--accent)" fill-opacity="'+op+'"/>';}
+    for(var i=0;i<n-1;i++){var x0=X(i),x1=X(i+1),h0=Hh(i)/2,h1=Hh(i+1)/2;
+      var pts=x0+','+(cy-h0)+' '+x1+','+(cy-h1)+' '+x1+','+(cy+h1)+' '+x0+','+(cy+h0);
+      if(FN[i+1].pending){ s+='<polygon points="'+pts+'" fill="none" stroke="var(--line-2)" stroke-width="1.5" stroke-dasharray="4 3"/>'; }
+      else { var op=Math.round((1-i*0.15)*100)/100; s+='<polygon points="'+pts+'" fill="var(--accent)" fill-opacity="'+op+'"/>'; }}
     for(var i=0;i<n;i++){var x=X(i),pct=Math.round(FN[i].v/max*1000)/10;
       s+='<line x1="'+x+'" y1="'+(padT-6)+'" x2="'+x+'" y2="'+(H-padB+10)+'" stroke="var(--line)" stroke-width="1"/>';
       s+='<text x="'+(x+9)+'" y="'+(padT-13)+'" class="fnl-lbl">'+FN[i].l+'</text>';
       if(i===0){ s+='<text x="6" y="'+(cy-3)+'" class="fnl-hero">'+FN[0].v.toLocaleString()+'</text>'+
         '<text x="6" y="'+(cy+17)+'" class="fnl-sub">leads (100%)</text>'; }
+      else if(FN[i].pending){ s+='<text x="'+(x+9)+'" y="'+(H-padB+26)+'" class="fnl-pend">~20 Aug</text>'+
+        '<text x="'+(x+9)+'" y="'+(H-padB+43)+'" class="fnl-pend">pending</text>'; }
       else { s+='<text x="'+(x+9)+'" y="'+(H-padB+26)+'" class="fnl-pct">'+pct+'%</text>'+
         '<text x="'+(x+9)+'" y="'+(H-padB+43)+'" class="fnl-cnt">'+FN[i].v.toLocaleString()+'</text>'; }}
     s+='</svg>';
@@ -569,8 +576,10 @@
   document.querySelectorAll('.tabs [data-tab]').forEach(function(b){b.addEventListener("click",function(){
     document.querySelectorAll('.tabs [data-tab]').forEach(function(x){x.setAttribute("aria-selected","false");});
     b.setAttribute("aria-selected","true"); var t=b.getAttribute("data-tab");
-    document.getElementById("tabFunnel").hidden=t!=="funnel"; document.getElementById("tabEmail").hidden=t!=="email"; document.getElementById("tabSources").hidden=t!=="sources";
-    if(t==="funnel")drawChart();
+    var main=(t==="overview"||t==="analysis"),tf=document.getElementById("tabFunnel");
+    tf.hidden=!main; if(main)tf.setAttribute("data-view",t);
+    document.getElementById("tabEmail").hidden=t!=="email"; document.getElementById("tabSources").hidden=t!=="sources";
+    if(t==="overview")drawChart();
   });});
 
   var SESS={trials:33,seen:19,scheduled:4,stuck:6,gone:4,unsub:9,unsubAfterDr:5,stNoshow:2,stNever:3,stCancel:1,nsRateN:30.4,nsRateO:17.1,toConsultN:1.6,toConsultO:3.9};
