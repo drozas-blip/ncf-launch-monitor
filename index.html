@@ -64,7 +64,7 @@
   .bffill.warn{background:repeating-linear-gradient(45deg,var(--warn),var(--warn) 7px,color-mix(in srgb,var(--warn) 70%,#000) 7px,color-mix(in srgb,var(--warn) 70%,#000) 14px)}
   .bffill.sub{background:var(--old);opacity:.6} .bffill.brk{background:repeating-linear-gradient(45deg,var(--crit),var(--crit) 7px,color-mix(in srgb,var(--crit) 65%,#000) 7px,color-mix(in srgb,var(--crit) 65%,#000) 14px)}
   .bfval{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:right;min-width:120px} .bfval b{font-size:14px}
-  .bfpc{color:var(--muted)} .bfpc.lo{color:var(--crit)}
+  .bfpc{color:var(--muted)} .bfpc.lo{color:var(--crit)} .bfof{color:var(--faint);font-weight:400;font-size:10px}
   .bfrow.sub .bfname{color:var(--muted);font-size:12px;padding-left:12px} .bfrow.sub .bftrack{height:15px} .bfrow.sub .bfval{font-size:11.5px}
   .tetag{font-family:var(--mono);font-size:9px;color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);border-radius:4px;padding:0 4px;vertical-align:middle}
   .brktag{font-family:var(--mono);font-size:9px;color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 40%,transparent);border-radius:4px;padding:0 4px;vertical-align:middle}
@@ -237,7 +237,7 @@
     <div class="card-h"><div class="lft"><h2>Full funnel — every step</h2>
       <span class="info" data-tip="Every step of the new flow since launch. ✓ real = from the business DB (test excluded); details on the Sources tab.">i</span></div>
       <span class="mono" style="font-size:11px;color:var(--muted)">new flow · since launch · through 3 Aug · <b>click a row for details</b></span></div>
-    <p class="card-sub" style="margin:-2px 0 14px">Bars &amp; % are <b>step-to-step</b> (share of the previous step), not of the total. <span class="tetag">✓ real</span> = test excluded (business DB); other steps are anonymous Mixpanel events with a small share of test users.</p>
+    <p class="card-sub" style="margin:-2px 0 14px">Each <b>%</b> is that step as a share of <b>its base</b>, labelled per row (e.g. <span class="mono">71% of opens</span>, <span class="mono">10% of accounts</span>) — not of the grand total. <span class="tetag">✓ real</span> = test excluded (business DB); other steps are anonymous Mixpanel events with a small share of test users.</p>
     <div id="bigfunnel"></div>
   </div>
 
@@ -313,32 +313,34 @@
   var YEAR="2026", fullDate=function(i){return YEAR+"-"+TREND[i].d;}, idxByDate={};
   TREND.forEach(function(x,i){idxByDate[YEAR+"-"+x.d]=i;}); var LAST=TREND.length-1;
 
+  // bref = the step this % is measured against (looked up live, so it stays correct);
+  // bl = short label shown as "of <bl>". Top row has no base.
   var BF=[
     {s:"Quiz",steps:[
-      {n:"Lead form opened",v:1705,base:0,d:"Unique visitors to the quiz page — Typeform's own count (the form itself)."},
-      {n:"Lead form completed",v:1220,base:1646,d:"Form submissions — Typeform's own count. 72% of people who open the form complete it. (Mixpanel's 'Lead Form Completed' event under-fires this, so we use Typeform.)"},
-      {n:"↳ Eligible",v:602,base:1180,sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
-      {n:"↳ Not eligible",v:618,base:1180,sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
+      {n:"Lead form opened",v:1705,d:"Unique visitors to the quiz page — Typeform's own count (the form itself)."},
+      {n:"Lead form completed",v:1220,bref:"Lead form opened",bl:"opens",d:"Form submissions — Typeform's own count. (Mixpanel's 'Lead Form Completed' event under-fires this, so we use Typeform.)"},
+      {n:"↳ Eligible",v:602,bref:"Lead form completed",bl:"completed",sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
+      {n:"↳ Not eligible",v:618,bref:"Lead form completed",bl:"completed",sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
     {s:"Registration → account",steps:[
-      {n:"Registration started",v:650,base:1180,d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
-      {n:"↳ email — reached OTP",v:315,base:612,sub:1,d:"OTP code sent (email sign-ups only)"},
-      {n:"↳ email — OTP verified",v:259,base:296,sub:1,d:"Entered the code correctly (−50 drop at OTP)"},
-      {n:"↳ Google sign-in (skips OTP)",v:127,base:612,sub:1,d:"Derived: Mixpanel 'registration completed' (367) − OTP-verified (246). Name comes from Google — no OTP."},
-      {n:"Account created",v:323,base:612,te:1,d:"Real accounts · test excluded (business DB). Mixpanel 'completed' event fired 367 (higher — anonymous/test)."}]},
+      {n:"Registration started",v:650,bref:"Lead form completed",bl:"completed",d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
+      {n:"↳ email — reached OTP",v:315,bref:"Registration started",bl:"reg. started",sub:1,d:"OTP code sent (email sign-ups only)"},
+      {n:"↳ email — OTP verified",v:259,bref:"↳ email — reached OTP",bl:"OTP sent",sub:1,d:"Entered the code correctly"},
+      {n:"↳ Google sign-in (skips OTP)",v:127,bref:"Registration started",bl:"reg. started",sub:1,d:"Derived: Mixpanel 'registration completed' − OTP-verified. Name comes from Google — no OTP."},
+      {n:"Account created",v:323,bref:"Registration started",bl:"reg. started",te:1,d:"Real accounts · test excluded (business DB)."}]},
     {s:"Profile — name",steps:[
-      {n:"Name step started",v:141,base:317,bl:"accounts",d:"/collect-name · of accounts (email/standard route)"},
-      {n:"Name step completed",v:115,base:137,sub:1,d:"Name saved (−25 drop)"}]},
+      {n:"Name step started",v:141,bref:"Account created",bl:"accounts",d:"/collect-name · of accounts (email/standard route)"},
+      {n:"Name step completed",v:115,bref:"Name step started",bl:"name started",sub:1,d:"Name saved"}]},
     {s:"Trial",steps:[
-      {n:"Trial started",v:33,base:317,bl:"accounts",te:1,d:"subscription created · Metabase · trial at signup"},
-      {n:"In trial (active)",v:24,base:31,te:1,sub:1,d:"still in trial"},
-      {n:"Cancelled during trial",v:9,base:31,bl:"trials",warn:1,te:1,sub:1,d:"dropped — churned before paying"}]},
+      {n:"Trial started",v:33,bref:"Account created",bl:"accounts",te:1,d:"subscription created · Metabase · trial at signup"},
+      {n:"In trial (active)",v:24,bref:"Trial started",bl:"trials",te:1,sub:1,d:"still in trial"},
+      {n:"Cancelled during trial",v:9,bref:"Trial started",bl:"trials",warn:1,te:1,sub:1,d:"dropped — churned before paying"}]},
     {s:"Consult & qualification",steps:[
-      {n:"Booked a consult",v:30,base:317,bl:"accounts",te:1,d:"Has a scheduled meeting (business DB, test excluded)."},
-      {n:"↳ Medical form before consult",v:27,base:28,sub:1,d:"27 of 28 did the medical form before the call — so the doctor has the history ready."},
-      {n:"Meeting done",v:20,base:28,te:1,d:"Consult actually held (status=done). The rest: no-show, scheduled ahead or cancelled — see the Trial cohort block below."},
-      {n:"Qualified by doctor",v:15,base:16,sub:1,te:1,d:"qualification_status = qualified after the consult — 15 of 16 held. Health DB."}]},
+      {n:"Booked a consult",v:30,bref:"Account created",bl:"accounts",te:1,d:"Has a scheduled meeting (business DB, test excluded)."},
+      {n:"↳ Medical form before consult",v:27,bref:"Booked a consult",bl:"booked",sub:1,d:"did the medical form before the call — so the doctor has the history ready."},
+      {n:"Meeting done",v:20,bref:"Booked a consult",bl:"booked",te:1,d:"Consult actually held (status=done). The rest: no-show, scheduled ahead or cancelled — see the Trial cohort block below."},
+      {n:"Qualified by doctor",v:15,bref:"Meeting done",bl:"meetings held",sub:1,te:1,d:"qualification_status = qualified after the consult. Health DB."}]},
     {s:"App",steps:[
-      {n:"Installed the app",v:29,base:317,bl:"accounts",te:1,d:"Has a Firebase push token = app installed & opened (business DB, test excluded). No Mixpanel install event — this is the reliable source."}]}
+      {n:"Installed the app",v:29,bref:"Account created",bl:"accounts",te:1,d:"Has a Firebase push token = app installed & opened (business DB, test excluded)."}]}
   ];
   var QUIZ=[{n:"Eligible ✓",v:602,c:"g"},{n:"BMI < 27",v:406,c:"c",k:1},{n:"BMI 27–29, no comorbidity",v:103,c:"c",k:1},{n:"Contraindication",v:90,c:"w"},{n:"Under 18",v:5,c:"w"},{n:"Pregnant / breastfeeding",v:14,c:"w"}]; var QTOT=1220;
   var STEPX=[
@@ -422,9 +424,10 @@
   function renderFunnel(){
     document.getElementById("bigfunnel").innerHTML=BF.map(function(g){
       var rows=g.steps.map(function(st){ var id=g.s.replace(/\W/g,"")+st.n.replace(/\W/g,"");
-        var pct = st.base ? Math.round(st.v/st.base*1000)/10 : null;         // relative to previous step
-        var w = st.base ? Math.min(st.v/st.base*100,100) : 100;
-        var pcH = pct!==null ? '<span class="bfpc'+(pct<40?" lo":"")+'">'+pct+'%</span>' : '';
+        var base = st.bref ? bfVal(st.bref) : 0;                             // measured live against this step
+        var pct = base ? Math.round(st.v/base*1000)/10 : null;
+        var w = base ? Math.min(st.v/base*100,100) : 100;
+        var pcH = pct!==null ? '<span class="bfpc'+(pct<40?" lo":"")+'">'+pct+'% <span class="bfof">of '+(st.bl||"prev")+'</span></span>' : '';
         var fillcls=st.warn?" warn":st.brk?" brk":st.sub?" sub":"";
         return '<div class="bfrow'+(st.sub?" sub":"")+'" data-fd="'+id+'"><span class="bfname">'+st.n+
           (st.warn?' <span style="color:var(--warn)">⚠</span>':'')+(st.te?' <span class="tetag">✓ real</span>':'')+(st.brk?' <span class="brktag">⚠ broke</span>':'')+'</span>'+
