@@ -254,11 +254,14 @@
     <div id="sessTree" class="tree"></div>
   </div>
 
-  <!-- 5b. TRIAL COHORT vs OLD (analysis) -->
+  <!-- 5b. TRIAL COHORT — retention & vs-old quality (analysis) -->
   <div class="card" data-view="analysis">
-    <div class="card-h"><div class="lft"><h2>Trial cohort vs old — speed &amp; no-shows</h2>
-      <span class="info" data-tip="No-show rate and time-to-doctor for the new-flow trials, compared with the old flow (May–June 2026).">i</span></div>
-      <span class="baseline">NEW vs OLD · MAY–JUNE 2026</span></div>
+    <div class="card-h"><div class="lft"><h2>Trial cohort — retention &amp; pace</h2>
+      <span class="info" data-tip="Of the new-flow trials: how many are still in vs dropped out, plus no-show rate and time-to-doctor compared with the old flow (May–June 2026).">i</span></div>
+      <span class="baseline">NEW · vs OLD ON NO-SHOW &amp; TIME</span></div>
+    <div class="cmp-subhead" style="margin-bottom:10px">Still in trial vs dropped out</div>
+    <div id="sessRetain" class="tree-sum3" style="margin-top:0;border-top:none;padding-top:0"></div>
+    <div class="cmp-subhead" style="margin:18px 0 10px">No-show &amp; speed · vs old</div>
     <div id="sessTime" class="sess-time"></div>
   </div>
 
@@ -616,6 +619,10 @@
         '<div class="ts3 s"><div class="ts3-v">'+subsTotal+'<span class="ts3-p">'+Math.round(subsTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">still subscribed</div></div>'+
         '<div class="ts3 u"><div class="ts3-v">'+unsubTotal+'<span class="ts3-p">'+Math.round(unsubTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">unsubscribed</div></div>'+
       '</div>';
+    var retain=document.getElementById("sessRetain");
+    if(retain) retain.innerHTML=
+      '<div class="ts3 s"><div class="ts3-v">'+subsTotal+'<span class="ts3-p">'+Math.round(subsTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">still in trial</div></div>'+
+      '<div class="ts3 u"><div class="ts3-v">'+unsubTotal+'<span class="ts3-p">'+Math.round(unsubTotal/SESS.trials*100)+'%</span></div><div class="ts3-l">dropped out</div></div>';
     var M=[{l:"No-show rate",s:"of concluded consults · vs old",n:SESS.nsRateN,o:SESS.nsRateO,u:"%"},
       {l:"Time to see the doctor",s:"signup → consult held · vs old",n:SESS.toConsultN,o:SESS.toConsultO,u:"d"}];
     document.getElementById("sessTime").innerHTML=M.map(function(m){
