@@ -8,6 +8,9 @@ on:
   workflow_dispatch: {}       # allow manual runs from the Actions tab
   push:
     branches: [main]          # redeploy on layout/code changes
+    # Note: the "Commit refreshed data" step pushes with the default GITHUB_TOKEN,
+    # and GitHub deliberately does NOT re-trigger workflows for such pushes — so
+    # the daily data commit does not start a second run. No loop.
 
 permissions:
   contents: write             # commit refreshed index.html
@@ -31,7 +34,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Validate HTML anchors (offline, no secrets)
+        run: python3 regen/regen.py --check
+
       - name: Regenerate dashboard data
+        id: regen
         env:
           METABASE_URL: ${{ secrets.METABASE_URL }}
           METABASE_USERNAME: ${{ secrets.METABASE_USERNAME }}
@@ -43,7 +50,11 @@ jobs:
           CIO_APP_API_KEY: ${{ secrets.CIO_APP_API_KEY }}
         run: python3 regen/regen.py
 
+      # Only commit when a data block actually changed. The stamp is refreshed
+      # every run (so the deployed page always shows a live time), but a
+      # stamp-only diff must not add a commit to the history.
       - name: Commit refreshed data
+        if: steps.regen.outputs.data_changed == '1'
         run: |
           git config user.name "ncf-dashboard-bot"
           git config user.email "actions@users.noreply.github.com"

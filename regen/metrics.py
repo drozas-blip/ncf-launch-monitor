@@ -143,7 +143,6 @@ def trend_db_daily(mb):
 NEWFLOW_WHERE = 'properties["landing_source"]=="new_onboarding_flow"'
 # "lead form page view" was renamed (23 Jul); sum both casings to span the boundary.
 MP_OPENS = ["Lead form page view", "lead form page view"]
-MP_COMPLETES = ["Lead Form Completed", "lead form completed"]
 MP_STEPS = {   # single-cased new-flow events
     "reg_started": "web registration started",
     "reg_completed": "web registration completed",
@@ -171,11 +170,6 @@ def _mp_daily_sum(mp, events, frm, to, typ="general"):
 def mixpanel_opens_daily(mp, frm, to):
     """Daily form page-views (general) for the new flow → {'MM-DD': opens}."""
     return _mp_daily_sum(mp, MP_OPENS, frm, to)
-
-
-def mixpanel_completes_daily(mp, frm, to):
-    """Daily lead-form completes (general) for the new flow → {'MM-DD': completes}."""
-    return _mp_daily_sum(mp, MP_COMPLETES, frm, to)
 
 
 def mixpanel_steps(mp, frm, to):

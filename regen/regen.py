@@ -53,9 +53,98 @@ def replace_block(html, pattern, literal, label):
     return new
 
 
+# ---- anchor contract ---------------------------------------------------------
+# The surgical replacements above key on these literal strings in index.html.
+# check_anchors() validates they all still resolve (offline, no API calls) so a
+# stray copy edit is caught immediately instead of on the next data run.
+BF_NAMES = [
+    "Lead form opened", "Lead form completed", "↳ Eligible", "↳ Not eligible",
+    "Registration started", "↳ email — reached OTP", "↳ email — OTP verified",
+    "↳ Google sign-in (skips OTP)", "Name step started", "Name step completed",
+    "Account created", "Trial started", "In trial (active)", "Cancelled during trial",
+    "Booked a consult", "Meeting done", "Installed the app",
+]
+STEPX_LABELS = [
+    "Quiz — opened → completed", "Registration — started → account",
+    "OTP — code sent → verified", "Name — started → completed",
+]
+VERDICT_LABELS = [
+    "Form completion — opened → completed", "Activation — free trial vs paid sub",
+    "Consult booking", "App install",
+]
+
+
+def check_anchors(html):
+    """Return a list of anchor problems (empty = the HTML contract is intact)."""
+    problems = []
+
+    def want(label, pattern, n=1):
+        c = len(re.findall(pattern, html, re.S))
+        if c != n:
+            problems.append(f"{label}: found {c}, expected {n}")
+
+    for name in BF_NAMES:
+        want("BF " + name, 'n:"' + re.escape(name) + r'",v:')
+    for label in STEPX_LABELS:
+        want("STEPX " + label, 's:"' + re.escape(label) + '"')
+    for label in VERDICT_LABELS:
+        want("VERDICT " + label, 'l:"' + re.escape(label) + r'",n:')
+    for label, pat in [("SESS", r"var SESS=\{"), ("QUIZ", r"var QUIZ=\["),
+                       ("QTOT", r"var QTOT="), ("TREND", r"var TREND\s*=\s*\["),
+                       ("EMAIL", r"var EMAIL=\["), ("stamp", r"Last updated <b>.*?</b> · ")]:
+        want(label, pat)
+    return problems
+
+
+# ---- sanity gate -------------------------------------------------------------
+# Guards a cumulative metric against a broken-but-parseable pull (the 962-vs-1220
+# class): if a number that only ever grows suddenly reads 0 or drops hard, keep
+# the last committed value and log it — same "degrade, don't corrupt" philosophy
+# as the per-source T() wrappers.
+def _embedded_bf(html, name):
+    m = re.search('n:"' + re.escape(name) + r'",v:([0-9.]+)', html)
+    return float(m.group(1)) if m else None
+
+
+def _guard(warns, name, new, old, floor=1, max_drop=0.5):
+    if old is None or new is None:
+        return new
+    if new < floor <= old:
+        warns.append(f"SANITY {name}: kept {int(old)} (pull returned {new})")
+        return int(old)
+    if old > 0 and new < old * (1 - max_drop):
+        warns.append(f"SANITY {name}: kept {int(old)} (pull returned {new}, >{int(max_drop*100)}% drop)")
+        return int(old)
+    return new
+
+
+def _strip_stamp(s):
+    return re.sub(r"Last updated <b>.*?</b> · [^<]*", "", s)
+
+
+def _check_invariants(html, warns):
+    """The range-summed funnel must equal the funnel totals — assert it holds."""
+    m = re.search(r"var TREND\s*=\s*(\[.*?\]);", html, re.S)
+    if not m:
+        return
+    series = json.loads(m.group(1))
+
+    def trend_sum(key):
+        return sum(e["n"].get(key, 0) for e in series if e["d"] >= LAUNCH_MMDD)
+
+    for key, name in [("ld", "Lead form completed"), ("el", "↳ Eligible"),
+                      ("ac", "Account created"), ("tr", "Trial started"),
+                      ("bk", "Booked a consult"), ("md", "Meeting done")]:
+        total = _embedded_bf(html, name)
+        s = trend_sum(key)
+        if total is not None and abs(s - total) > max(2, total * 0.02):
+            warns.append(f"INVARIANT {name}: daily sum {s} ≠ funnel total {int(total)}")
+
+
 # ---- main --------------------------------------------------------------------
 def main():
     lib.load_secrets()
+    lib.require_secrets()
     mb, mp, tf, cio = lib.Metabase(), lib.Mixpanel(), lib.Typeform(), lib.CustomerIO()
     today = datetime.datetime.now(TZ).date()
     frm, to = metrics.LAUNCH_DATE, today.isoformat()
@@ -76,11 +165,9 @@ def main():
     quiz = T(lambda: metrics.typeform_quiz(tf), "quiz/Typeform")
     steps = T(lambda: metrics.mixpanel_steps(mp, frm, to), "steps/Mixpanel")
     opens_d = T(lambda: metrics.mixpanel_opens_daily(mp, frm, to), "opens/Mixpanel")
-    comp_d = T(lambda: metrics.mixpanel_completes_daily(mp, frm, to), "completes/Mixpanel")
     trend_db = T(lambda: metrics.trend_db_daily(mb), "trend/Metabase")
     emails = T(lambda: metrics.emails_cio(cio), "emails/CIO")
     vd = metrics.verdict_new(fn, quiz) if (fn and quiz) else None
-    elig_rate = (quiz["eligible"] / quiz["completed"]) if (quiz and quiz["completed"]) else 0
 
     with open(HTML_PATH, encoding="utf-8") as fh:
         html = original = fh.read()
@@ -98,12 +185,17 @@ def main():
             "," + ",".join(f"{k}:{keep[k]}" for k in keep) + "};"
         html = replace_block(html, r"var SESS=\{.*?\};", sess_lit, "SESS")
 
-    # 2) full funnel (BF) — new-flow real rows, only the sources that succeeded
+    # 2) full funnel (BF) — new-flow real rows, only the sources that succeeded.
+    #    Headline cumulative counts go through _guard (keep last if a pull looks
+    #    broken) before they're written.
     if quiz:
-        for name, val in [("Lead form opened", quiz["opened"]),
-                          ("Lead form completed", quiz["completed"]),
-                          ("↳ Eligible", quiz["eligible"]),
-                          ("↳ Not eligible", quiz["completed"] - quiz["eligible"])]:
+        opened = _guard(warns, "Lead form opened", quiz["opened"], _embedded_bf(html, "Lead form opened"))
+        completed = _guard(warns, "Lead form completed", quiz["completed"], _embedded_bf(html, "Lead form completed"))
+        eligible = _guard(warns, "↳ Eligible", quiz["eligible"], _embedded_bf(html, "↳ Eligible"))
+        for name, val in [("Lead form opened", opened),
+                          ("Lead form completed", completed),
+                          ("↳ Eligible", eligible),
+                          ("↳ Not eligible", completed - eligible)]:
             html = bf(html, name, val)
     if steps:
         google = max(steps["reg_completed"] - steps["otp_verified"], 0)
@@ -115,12 +207,16 @@ def main():
                           ("Name step completed", steps["name_completed"])]:
             html = bf(html, name, val)
     if fn:
-        for name, val in [("Account created", fn["accounts"]),
-                          ("Trial started", fn["trials"]),
+        acc_g = _guard(warns, "Account created", fn["accounts"], _embedded_bf(html, "Account created"))
+        tr_g = _guard(warns, "Trial started", fn["trials"], _embedded_bf(html, "Trial started"))
+        bk_g = _guard(warns, "Booked a consult", fn["booked"], _embedded_bf(html, "Booked a consult"))
+        md_g = _guard(warns, "Meeting done", fn["meeting_done"], _embedded_bf(html, "Meeting done"))
+        for name, val in [("Account created", acc_g),
+                          ("Trial started", tr_g),
                           ("In trial (active)", fn["in_trial"]),
                           ("Cancelled during trial", fn["cancelled"]),
-                          ("Booked a consult", fn["booked"]),
-                          ("Meeting done", fn["meeting_done"]),
+                          ("Booked a consult", bk_g),
+                          ("Meeting done", md_g),
                           ("Installed the app", fn["installed"])]:
             html = bf(html, name, val)
 
@@ -201,18 +297,30 @@ def main():
         email_lit = "var EMAIL=[\n    " + ",\n    ".join(em_obj(e) for e in emails) + "];"
         html = replace_block(html, r"var EMAIL=\[.*?\];", email_lit, "EMAIL")
 
-    # 8) last-updated stamp (always)
+    # invariant: the range-summed funnel must still equal the funnel totals
+    _check_invariants(html, warns)
+
+    # Did any actual data change? (compare ignoring the always-moving stamp)
+    data_changed = _strip_stamp(html) != _strip_stamp(original)
+
+    # 8) last-updated stamp — always refreshed so the deployed page shows a live
+    #    time; the *commit* is gated on data_changed (see the workflow) so quiet
+    #    days don't add stamp-only commits to the history.
     stamp = datetime.datetime.now(TZ)
     html = re.sub(r"Last updated <b>.*?</b> · [^<]*",
                   f"Last updated <b>{stamp.strftime('%-d %b %Y')}</b> · {stamp.strftime('%H:%M %Z')}",
                   html, count=1)
-
-    if html == original:
-        print("No change.")
-        return
     with open(HTML_PATH, "w", encoding="utf-8") as fh:
         fh.write(html)
-    print("Regenerated", HTML_PATH, "·", stamp.strftime("%-d %b %Y · %H:%M %Z"))
+
+    # expose the result to CI (GitHub Actions step output)
+    gh_out = os.environ.get("GITHUB_OUTPUT")
+    if gh_out:
+        with open(gh_out, "a", encoding="utf-8") as f:
+            f.write(f"data_changed={'1' if data_changed else '0'}\n")
+
+    print(("Regenerated " if data_changed else "No data change (stamp refreshed) ") +
+          HTML_PATH + " · " + stamp.strftime("%-d %b %Y · %H:%M %Z"))
     if cohort:
         print("  cohort ", cohort)
     if fn:
@@ -222,11 +330,28 @@ def main():
     if emails:
         print("  emails ", len(emails), "· sent", sum(e["sent"] for e in emails))
     if warns:
-        print("  ⚠ kept last values for:")
+        print("  ⚠ sanity/invariant notes:")
         for w in warns:
             print("    -", w)
-    print("  updated", stamp.strftime("%-d %b %Y · %H:%M %Z"))
+
+
+def _run_check():
+    """Offline anchor validation — no secrets, no API calls. Exit non-zero if the
+    HTML no longer matches the replacement contract."""
+    with open(HTML_PATH, encoding="utf-8") as fh:
+        problems = check_anchors(fh.read())
+    if problems:
+        print("regen --check: FAIL")
+        for p in problems:
+            print("  -", p)
+        raise SystemExit(1)
+    print("regen --check: OK — all", len(BF_NAMES) + len(STEPX_LABELS) + len(VERDICT_LABELS) + 6,
+          "anchors resolve")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--check" in sys.argv:
+        _run_check()
+    else:
+        main()

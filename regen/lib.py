@@ -38,6 +38,27 @@ def load_secrets(path=SECRETS_PATH):
             os.environ.setdefault(key, val)
 
 
+REQUIRED_SECRETS = (
+    "METABASE_URL", "METABASE_USERNAME", "METABASE_PASSWORD",
+    "MIXPANEL_SA_USERNAME", "MIXPANEL_SA_SECRET", "MIXPANEL_PROJECT_ID",
+    "TYPEFORM_TOKEN", "CIO_APP_API_KEY",
+)
+
+
+def require_secrets(keys=REQUIRED_SECRETS):
+    """Fail fast with a clear message (not a bare KeyError) if a secret is unset.
+
+    Locally these come from ~/.config/secrets.env; in CI from Actions secrets.
+    """
+    missing = [k for k in keys if not os.environ.get(k)]
+    if missing:
+        raise SystemExit(
+            "regen: missing required secret(s): " + ", ".join(missing) +
+            "\n  local  → add them to ~/.config/secrets.env"
+            "\n  CI     → repo Settings → Secrets and variables → Actions"
+        )
+
+
 _UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"

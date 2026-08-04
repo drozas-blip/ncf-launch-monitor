@@ -11,8 +11,10 @@ live data sources and redeploys it to GitHub Pages.
 
 ## One-time setup (GitHub)
 
-1. **Create a private repo** under the org, e.g. `ferbalance/ncf-launch-monitor`,
-   and push this folder to `main`.
+1. **Create the repo** and push this folder to `main`. This is currently
+   `drozas-blip/ncf-launch-monitor`, and it is **public** — GitHub's free plan
+   only serves Pages from public repos. See *Who can see it* below for what that
+   means and how to lock it down properly.
 2. **Add the data-source secrets** — repo → *Settings → Secrets and variables →
    Actions → New repository secret* — with the same values as `~/.config/secrets.env`:
    - `METABASE_URL`, `METABASE_USERNAME`, `METABASE_PASSWORD`
@@ -29,14 +31,23 @@ After that it refreshes itself every morning; you never touch it.
 
 ## Who can see it
 
-The repo is **private** and the page carries `noindex` + a `robots.txt` deny, so it
-won't show up in search. On standard GitHub, a Pages URL is still reachable by
-anyone who has the (unguessable) link. For a hard "org-members-only" lock, put
-**Cloudflare Access** in front of a custom subdomain (e.g. `ncf.balanceapp.ai`):
-add the domain in Cloudflare, point it at Pages, and add an Access policy for the
-team's email domain. No code changes needed.
+⚠️ **The repo and the Pages site are public.** The page carries `noindex` + a
+`robots.txt` deny, so it won't show up in search engines, but **anyone with the
+link can open it**, and the source (including `regen/`) is world-readable on
+GitHub. There is *no* access control today — treat the URL as "unlisted", not
+"private".
 
-The page shows **only aggregate metrics — no personal data**.
+This is acceptable only because the page shows **aggregate metrics only — no
+personal data**, and no secrets live in the repo (they're GitHub Actions secrets,
+never committed).
+
+For a real "org-members-only" lock you have two options:
+- **Make the repo private** — requires a paid GitHub plan (Team/Enterprise) to
+  keep Pages working, then flip *Settings → Pages → Visibility → Private*.
+- **Put Cloudflare Access in front of a custom subdomain** (e.g.
+  `ncf.balanceapp.ai`): add the domain in Cloudflare, point it at Pages, and add
+  an Access policy for the team's email domain. No code changes needed. This also
+  hides the source, which Pages-visibility alone does not.
 
 ## Editing the dashboard
 
@@ -44,6 +55,18 @@ Edit `index.html` directly (layout, copy, colors). The data blocks are plain
 `var NAME = …;` literals near the bottom of the `<script>`; the refresh job only
 rewrites the ones it owns, so your layout edits are safe. Push to `main` to
 redeploy.
+
+⚠️ **One rule:** the refresh keys on specific label strings (e.g.
+`n:"Meeting done"`, `l:"App install"`). Don't rename those *keys* — the display
+copy around them is free to change, but the anchor strings are a contract. After
+editing, run the offline validator (no secrets, no network):
+
+```
+python3 regen/regen.py --check
+```
+
+CI runs it too, before every refresh, so a broken anchor fails fast with a clear
+message instead of silently skipping a number.
 
 ## Data coverage (what auto-refreshes)
 
@@ -68,6 +91,14 @@ historical benchmark. A couple of small funnel rows without a clean source
 To add/adjust a block: edit the builder in `metrics.py` and its replacement in
 `regen.py`. Run `python3 regen/regen.py` locally (reads `~/.config/secrets.env`) to
 test before pushing — it rewrites `index.html` in place and prints what it changed.
+
+**Data safety.** Headline cumulative counts (leads, eligible, accounts, trials,
+bookings, meetings) pass through a sanity gate: if a pull returns `0` or drops by
+more than half, the last good value is kept and the run logs a `SANITY …` note
+instead of publishing a broken number. A final invariant check asserts the
+range-summed daily series still equals the funnel totals (logs `INVARIANT …` if
+not). Both surface in the workflow log without failing the deploy — the page
+degrades to the last good value rather than showing garbage.
 
 ## Note: Metabase is behind Cloudflare
 
