@@ -75,3 +75,10 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub Pages deployments sometimes go live slower than the action's
+          # default 10-min poll window — it then reports failure even though the
+          # deploy completes moments later. Give it 25 min so a slow-but-fine
+          # deploy is reported green. (Data + build already succeeded by here.)
+          timeout: 1500000
+          error_count: 25
