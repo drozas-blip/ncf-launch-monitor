@@ -103,7 +103,7 @@
   .fnl{width:100%;height:auto;display:block;margin-top:4px} .fnl text{dominant-baseline:auto}
   .fnl-lbl{fill:var(--muted);font:600 12px var(--sans)} .fnl-hero{fill:var(--ink);font:700 29px var(--sans);letter-spacing:-.02em}
   .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)} .fnl-pend{fill:var(--faint);font:italic 400 11.5px var(--sans)}
-  #tabFunnel{display:flex;flex-direction:column}
+  #tabFunnel:not([hidden]){display:flex;flex-direction:column}
   #tabFunnel[data-view="overview"] [data-view="analysis"]{display:none} #tabFunnel[data-view="analysis"] [data-view="overview"]{display:none}
   .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
