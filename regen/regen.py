@@ -62,7 +62,7 @@ BF_NAMES = [
     "Registration started", "↳ email — reached OTP", "↳ email — OTP verified",
     "↳ Google sign-in (skips OTP)", "Name step started", "Name step completed",
     "Account created", "Trial started", "In trial (active)", "Cancelled during trial",
-    "Booked a consult", "Meeting done", "Installed the app",
+    "Booked a consult", "Meeting done", "Qualified by doctor", "Installed the app",
 ]
 STEPX_LABELS = [
     "Quiz — opened → completed", "Registration — started → account",
@@ -161,6 +161,7 @@ def main():
             return None
 
     cohort = T(lambda: metrics.trial_cohort(mb), "cohort/Metabase")
+    doctor = T(lambda: metrics.doctor_metrics(mb), "doctor/Metabase")
     fn = T(lambda: metrics.funnel_db(mb), "funnel/Metabase")
     quiz = T(lambda: metrics.typeform_quiz(tf), "quiz/Typeform")
     steps = T(lambda: metrics.mixpanel_steps(mp, frm, to), "steps/Mixpanel")
@@ -181,8 +182,17 @@ def main():
             keep[k] = mm.group(1) if mm else 0
         sess_fields = ["trials", "seen", "scheduled", "stuck", "gone", "unsub",
                        "unsubAfterDr", "stNoshow", "stNever", "stCancel"]
-        sess_lit = "var SESS={" + ",".join(f"{k}:{cohort[k]}" for k in sess_fields) + \
-            "," + ",".join(f"{k}:{keep[k]}" for k in keep) + "};"
+        parts = [f"{k}:{cohort[k]}" for k in sess_fields]
+        # doctor's verdict split for the reached-doctor leaves (same cohort as seen)
+        doc_fields = ["subQual", "subDisq", "subNone", "unsubQual", "unsubDisq", "unsubNone"]
+        if doctor:
+            parts += [f"{k}:{doctor[k]}" for k in doc_fields]
+        else:  # keep whatever's already embedded if the pull failed
+            for k in doc_fields:
+                mm = m and re.search(rf"{k}:([0-9]+)", m.group(1))
+                parts.append(f"{k}:{mm.group(1) if mm else 0}")
+        parts += [f"{k}:{keep[k]}" for k in keep]
+        sess_lit = "var SESS={" + ",".join(parts) + "};"
         html = replace_block(html, r"var SESS=\{.*?\};", sess_lit, "SESS")
 
     # 2) full funnel (BF) — new-flow real rows, only the sources that succeeded.
@@ -219,6 +229,8 @@ def main():
                           ("Meeting done", md_g),
                           ("Installed the app", fn["installed"])]:
             html = bf(html, name, val)
+    if doctor:  # was hard-coded/stale; now live from the Health DB
+        html = bf(html, "Qualified by doctor", doctor["qualified"])
 
     # 3) step completion (STEPX) — new sides
     if quiz:

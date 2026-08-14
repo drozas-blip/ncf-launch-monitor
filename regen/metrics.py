@@ -104,6 +104,67 @@ def funnel_db(mb):
             ("accounts", "trials", "in_trial", "cancelled", "booked", "meeting_done", "installed")}
 
 
+# --------------------------------------- doctor qualification (Health DB) ---
+# Cross-DB: the reached-doctor cohort + subscription state come from the business
+# DB (14, has email → test exclusion); the doctor's verdict lives in the Health
+# DB (21, keyed by user_id). We link on user_id (shared id space).
+# Same cohort as the trial-cohort tree (SESS): one row per trial user, their
+# subscription-active flag, keeping only those who reached the doctor. So the
+# qualified/disqualified split sums exactly to the tree's seen/unsubAfterDr.
+_REACHED_DOCTOR_SQL = f"""
+with cohort as (
+  select distinct on (lower(u.email)) u.id, lower(u.email) email, s.active
+  from subscriptions s join users u on u.id = s.user_id
+  where u.landing_source='new_onboarding_flow' and u.type='patient'
+    and lower(u.email) not like '%{TEST_DOMAIN}'
+    and s.trial_end_at is not null and s.created_at >= '{LAUNCH_DATE}'
+  order by lower(u.email), s.created_at desc
+),
+mtg as (
+  select lower(user_email) email,
+    max(case when state='scheduled' and time < now() and user_no_show_at is null then 1 else 0 end) seen
+  from meetings group by 1
+)
+select c.id, c.active
+from cohort c join mtg m on m.email = c.email
+where coalesce(m.seen, 0) = 1
+"""
+
+
+def doctor_metrics(mb):
+    """Doctor's qualified/disqualified verdict for everyone who reached the consult
+    (new flow, test-excluded, since launch), split by whether they're still
+    subscribed. Returns None if the cohort is empty or Health DB is unreachable."""
+    rows = mb.query(14, _REACHED_DOCTOR_SQL)
+    if not rows:
+        return None
+    active_by_id = {r["id"]: r["active"] for r in rows}
+    ids = list(active_by_id)
+    idlist = ",".join(str(i) for i in ids)
+    q = (f"select user_id, qualification_status::text qs from user_health_profiles "
+         f"where user_id in ({idlist}) and deleted_at is null")
+    qual = {r["user_id"]: (r["qs"] or "none") for r in mb.query(21, q)}
+
+    def verdict(qs):
+        return "disq" if qs == "unqualified" else ("qual" if qs == "qualified" else "none")
+
+    def bucket(is_active):
+        g = {"qual": 0, "disq": 0, "none": 0}
+        for i in ids:
+            if active_by_id[i] == is_active:
+                g[verdict(qual.get(i, "none"))] += 1
+        return g
+
+    sub, uns = bucket(True), bucket(False)
+    return {
+        "reached": len(ids),
+        "qualified": sub["qual"] + uns["qual"],       # → funnel "Qualified by doctor"
+        "disqualified": sub["disq"] + uns["disq"],
+        "subQual": sub["qual"], "subDisq": sub["disq"], "subNone": sub["none"],
+        "unsubQual": uns["qual"], "unsubDisq": uns["disq"], "unsubNone": uns["none"],
+    }
+
+
 # --------------------------------------------- daily trend (business DB) ---
 # accounts / trials / bookings per day, keyed by 'MM-DD'
 _TREND_DAILY_SQL = f"""
