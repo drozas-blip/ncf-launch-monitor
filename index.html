@@ -104,6 +104,25 @@
   .fnl-lbl{fill:var(--muted);font:600 12px var(--sans)} .fnl-hero{fill:var(--ink);font:700 29px var(--sans);letter-spacing:-.02em}
   .fnl-sub{fill:var(--faint);font:400 12px var(--sans)} .fnl-pct{fill:var(--ink);font:680 16px var(--mono)} .fnl-cnt{fill:var(--faint);font:400 12px var(--mono)} .fnl-pend{fill:var(--faint);font:italic 400 11.5px var(--sans)}
   #tabFunnel:not([hidden]){display:flex;flex-direction:column}
+  /* weekly review */
+  .wk-scroll{overflow-x:auto}
+  .wktab{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+  .wktab th,.wktab td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .wktab th{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+  .wktab th:first-child,.wktab td:first-child{text-align:left;white-space:nowrap;color:var(--muted)}
+  .wktab tr.wknd td{color:var(--faint)} .wktab tr.wknd td:first-child{color:var(--faint)}
+  .wktab td b{color:var(--ink)}
+  .wktab tr.wktot td{border-top:2px solid var(--line-2);border-bottom:none;font-weight:700;color:var(--ink);padding-top:9px}
+  .wktab tr.wkrate td{border:none;font-size:11px;color:var(--faint);padding-top:2px}
+  .wktab .z{color:var(--faint)}
+  .wkc{display:grid;grid-template-columns:repeat(9,1fr);gap:9px}
+  @media(max-width:920px){.wkc{grid-template-columns:repeat(3,1fr)}}
+  .wkc-i{border:1px solid var(--line);border-radius:9px;padding:10px 9px;background:var(--surface-2)}
+  .wkc-l{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wkc-v{font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .wkc-d{font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .wkc-d.up{color:var(--good)} .wkc-d.down{color:var(--crit)} .wkc-d.flat{color:var(--faint)}
+  .wkc-p{font-size:10px;color:var(--faint);margin-top:2px}
   #tabFunnel[data-view="overview"] [data-view="analysis"]{display:none} #tabFunnel[data-view="analysis"] [data-view="overview"]{display:none}
   .src-table{width:100%;border-collapse:collapse;font-size:12.5px}
   .src-table th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -177,11 +196,12 @@
 <div class="wrap">
   <div class="topbar">
     <div class="tb-left"><h1>New Onboarding Flow — Launch Monitor</h1></div>
-    <span class="live" id="lastUpdated"><span class="dot"></span>Last updated <b>16 Aug 2026</b> · 13:40 CEST</span>
+    <span class="live" id="lastUpdated"><span class="dot"></span>Last updated <b>17 Aug 2026</b> · 05:51 CEST</span>
   </div>
 
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-tab="weekly">Weekly review</button>
     <button role="tab" aria-selected="false" data-tab="analysis">Analysis</button>
     <button role="tab" aria-selected="false" data-tab="email">Email campaigns</button>
     <button role="tab" aria-selected="false" data-tab="sources">Sources</button>
@@ -222,7 +242,7 @@
       <div id="cmp"></div>
     </div>
     <div class="vsec">
-      <div class="vsec-h"><b>MQL</b> — of eligible leads <span class="vsec-sub">· new 787 · old 1379 · activation vs old</span></div>
+      <div class="vsec-h"><b>MQL</b> — of eligible leads <span class="vsec-sub">· new 803 · old 1379 · activation vs old</span></div>
       <div id="verdictMql" class="verdicts3"></div>
     </div>
   </div>
@@ -267,6 +287,29 @@
   </div>
 
   </div><!-- /tabFunnel -->
+
+  <div id="tabWeekly" class="tabpane" hidden>
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2>Week over week — the journey, step by step</h2>
+        <span class="info" data-tip="Totals for the last two complete weeks (Mon–Sun), new flow. Each number counts what happened that day, so a consult held on Monday may come from a lead captured the week before.">i</span></div>
+        <span class="mono" style="font-size:11px;color:var(--muted)" id="wkRangeLbl"></span></div>
+      <div id="wkCompare"></div>
+      <p class="sess-def" style="margin-top:14px">Each cell counts <b>what happened that day</b> — not a cohort. Someone who became a lead last week can book this week, so a row's later columns aren't produced by that row's leads. Conversion % is shown only up to <b>Trials</b> — those steps happen in the same session, so a weekly ratio holds. <b>Booked · Attended · Rx</b> lag by days, so this week's attendees were booked in an earlier week: a within-week ratio there would read over 100% and mean nothing.</p>
+      <p class="sess-def" style="border-left-color:var(--info)"><b>Website ≠ the top of this funnel.</b> It counts visits to the <b>home page</b> (findbalance.app / metodobalance.es) — total traffic, not new-flow only, since that event carries no flow tag. Most paid traffic goes <b>straight to the form</b> at <span class="mono">/evaluacion</span>, skipping the home page, which is why form opens can exceed website visits. Read them as <b>two separate front doors</b>, not one funnel.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2 id="wk1Title">Last week — day by day</h2></div>
+        <span class="mono" style="font-size:11px;color:var(--muted)" id="wk1Lbl"></span></div>
+      <div class="wk-scroll"><table class="wktab" id="wk1"></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="lft"><h2 id="wk2Title">The week before — day by day</h2></div>
+        <span class="mono" style="font-size:11px;color:var(--muted)" id="wk2Lbl"></span></div>
+      <div class="wk-scroll"><table class="wktab" id="wk2"></table></div>
+    </div>
+  </div>
 
   <div id="tabEmail" class="tabpane" hidden>
     <div class="kpis" id="emKpis"></div>
@@ -315,7 +358,7 @@
 
 <script>
 (function(){
-  var TREND = [{"d":"06-01","o":{"op":28,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-02","o":{"op":59,"ld":3,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-03","o":{"op":58,"ld":3,"el":3,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-04","o":{"op":84,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-05","o":{"op":50,"ld":0,"el":0,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-06","o":{"op":18,"ld":0,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-07","o":{"op":77,"ld":1,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-08","o":{"op":56,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-09","o":{"op":31,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-10","o":{"op":60,"ld":3,"el":3,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-11","o":{"op":53,"ld":3,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-12","o":{"op":21,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-13","o":{"op":49,"ld":3,"el":3,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-14","o":{"op":59,"ld":3,"el":0,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-15","o":{"op":56,"ld":3,"el":1,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-16","o":{"op":35,"ld":1,"el":0,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-17","o":{"op":56,"ld":4,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-18","o":{"op":69,"ld":5,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-19","o":{"op":46,"ld":2,"el":2,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-20","o":{"op":64,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-21","o":{"op":50,"ld":3,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-22","o":{"op":1061,"ld":26,"el":7,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-23","o":{"op":1998,"ld":43,"el":13,"ac":7,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-24","o":{"op":2865,"ld":48,"el":9,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-25","o":{"op":1919,"ld":54,"el":28,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-26","o":{"op":1286,"ld":41,"el":23,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-27","o":{"op":1401,"ld":36,"el":15,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-28","o":{"op":1593,"ld":48,"el":30,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-29","o":{"op":699,"ld":27,"el":10,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-30","o":{"op":875,"ld":28,"el":15,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-01","o":{"op":171,"ld":4,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-02","o":{"op":1116,"ld":19,"el":7,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-03","o":{"op":1784,"ld":68,"el":37,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-04","o":{"op":1962,"ld":74,"el":42,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-05","o":{"op":1464,"ld":46,"el":14,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-06","o":{"op":1510,"ld":54,"el":29,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-07","o":{"op":1464,"ld":37,"el":16,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-08","o":{"op":1562,"ld":45,"el":13,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-09","o":{"op":1561,"ld":34,"el":18,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-10","o":{"op":1686,"ld":56,"el":26,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-11","o":{"op":1471,"ld":47,"el":19,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-12","o":{"op":1430,"ld":49,"el":27,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-13","o":{"op":1355,"ld":30,"el":16,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-14","o":{"op":1361,"ld":35,"el":18,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-15","o":{"op":1266,"ld":45,"el":20,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-16","o":{"op":1574,"ld":37,"el":16,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-17","o":{"op":1188,"ld":31,"el":12,"ac":3,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-18","o":{"op":1306,"ld":50,"el":21,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-19","o":{"op":1285,"ld":49,"el":22,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-20","o":{"op":237,"ld":8,"el":5,"ac":4,"acR":0,"tr":0,"bk":0},"n":{"op":653,"ld":190,"el":82,"ac":38,"acR":39,"tr":2,"bk":1,"md":0}},{"d":"07-21","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":341,"ld":203,"el":91,"ac":40,"acR":47,"tr":4,"bk":4,"md":0}},{"d":"07-22","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":374,"ld":198,"el":86,"ac":39,"acR":38,"tr":2,"bk":2,"md":1}},{"d":"07-23","o":{"op":2,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":243,"ld":104,"el":50,"ac":37,"acR":36,"tr":3,"bk":2,"md":2}},{"d":"07-24","o":{"op":1,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":111,"ld":57,"el":29,"ac":12,"acR":12,"tr":0,"bk":0,"md":0}},{"d":"07-25","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":94,"ld":39,"el":25,"ac":15,"acR":15,"tr":1,"bk":1,"md":0}},{"d":"07-26","o":{"op":1,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":102,"ld":54,"el":31,"ac":22,"acR":22,"tr":4,"bk":4,"md":0}},{"d":"07-27","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":91,"ld":52,"el":36,"ac":22,"acR":23,"tr":3,"bk":3,"md":4}},{"d":"07-28","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":82,"ld":53,"el":31,"ac":18,"acR":19,"tr":1,"bk":1,"md":3}},{"d":"07-29","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":110,"ld":72,"el":35,"ac":26,"acR":26,"tr":4,"bk":5,"md":1}},{"d":"07-30","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":98,"ld":74,"el":43,"ac":8,"acR":9,"tr":2,"bk":2,"md":1}},{"d":"07-31","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":83,"ld":34,"el":19,"ac":6,"acR":6,"tr":1,"bk":1,"md":4}},{"d":"08-01","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":23,"ld":13,"el":7,"ac":10,"acR":10,"tr":2,"bk":0,"md":0}},{"d":"08-02","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":46,"ld":29,"el":14,"ac":11,"acR":11,"tr":1,"bk":1,"md":0}},{"d":"08-03","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":79,"ld":29,"el":15,"ac":8,"acR":4,"tr":1,"bk":1,"md":2}},{"d":"08-04","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":53,"ld":31,"el":15,"ac":15,"acR":0,"tr":2,"bk":3,"md":2}},{"d":"08-05","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":40,"el":19,"ac":15,"acR":0,"tr":3,"bk":1,"md":1}},{"d":"08-06","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":51,"ld":31,"el":15,"ac":14,"acR":0,"tr":4,"bk":4,"md":3}},{"d":"08-07","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":31,"el":24,"ac":13,"acR":0,"tr":3,"bk":3,"md":0}},{"d":"08-08","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":24,"ld":21,"el":11,"ac":8,"acR":0,"tr":1,"bk":1,"md":0}},{"d":"08-09","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":29,"el":17,"ac":17,"acR":0,"tr":2,"bk":3,"md":0}},{"d":"08-10","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":11,"el":5,"ac":5,"acR":0,"tr":0,"bk":0,"md":6}},{"d":"08-11","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":42,"ld":20,"el":13,"ac":7,"acR":0,"tr":1,"bk":2,"md":5}},{"d":"08-12","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":41,"ld":21,"el":15,"ac":4,"acR":0,"tr":2,"bk":2,"md":0}},{"d":"08-13","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":25,"el":13,"ac":7,"acR":0,"tr":3,"bk":3,"md":2}},{"d":"08-14","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":33,"el":18,"ac":8,"acR":0,"tr":1,"bk":2,"md":3}},{"d":"08-15","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":62,"ld":46,"el":22,"ac":10,"acR":0,"tr":1,"bk":1,"md":1}},{"d":"08-16","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":38,"ld":14,"el":6,"ac":4,"acR":0,"tr":0,"bk":0,"md":0}}];
+  var TREND = [{"d":"06-01","o":{"op":28,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-02","o":{"op":59,"ld":3,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-03","o":{"op":58,"ld":3,"el":3,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-04","o":{"op":84,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-05","o":{"op":50,"ld":0,"el":0,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-06","o":{"op":18,"ld":0,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-07","o":{"op":77,"ld":1,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-08","o":{"op":56,"ld":1,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-09","o":{"op":31,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-10","o":{"op":60,"ld":3,"el":3,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-11","o":{"op":53,"ld":3,"el":1,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-12","o":{"op":21,"ld":0,"el":0,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-13","o":{"op":49,"ld":3,"el":3,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-14","o":{"op":59,"ld":3,"el":0,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-15","o":{"op":56,"ld":3,"el":1,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-16","o":{"op":35,"ld":1,"el":0,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-17","o":{"op":56,"ld":4,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-18","o":{"op":69,"ld":5,"el":3,"ac":15,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-19","o":{"op":46,"ld":2,"el":2,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-20","o":{"op":64,"ld":0,"el":0,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-21","o":{"op":50,"ld":3,"el":1,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-22","o":{"op":1061,"ld":26,"el":7,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-23","o":{"op":1998,"ld":43,"el":13,"ac":7,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-24","o":{"op":2865,"ld":48,"el":9,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-25","o":{"op":1919,"ld":54,"el":28,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-26","o":{"op":1286,"ld":41,"el":23,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-27","o":{"op":1401,"ld":36,"el":15,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-28","o":{"op":1593,"ld":48,"el":30,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-29","o":{"op":699,"ld":27,"el":10,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"06-30","o":{"op":875,"ld":28,"el":15,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-01","o":{"op":171,"ld":4,"el":0,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-02","o":{"op":1116,"ld":19,"el":7,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-03","o":{"op":1784,"ld":68,"el":37,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-04","o":{"op":1962,"ld":74,"el":42,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-05","o":{"op":1464,"ld":46,"el":14,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-06","o":{"op":1510,"ld":54,"el":29,"ac":17,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-07","o":{"op":1464,"ld":37,"el":16,"ac":6,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-08","o":{"op":1562,"ld":45,"el":13,"ac":4,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-09","o":{"op":1561,"ld":34,"el":18,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-10","o":{"op":1686,"ld":56,"el":26,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-11","o":{"op":1471,"ld":47,"el":19,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-12","o":{"op":1430,"ld":49,"el":27,"ac":11,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-13","o":{"op":1355,"ld":30,"el":16,"ac":13,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-14","o":{"op":1361,"ld":35,"el":18,"ac":10,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-15","o":{"op":1266,"ld":45,"el":20,"ac":8,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-16","o":{"op":1574,"ld":37,"el":16,"ac":12,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-17","o":{"op":1188,"ld":31,"el":12,"ac":3,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-18","o":{"op":1306,"ld":50,"el":21,"ac":9,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-19","o":{"op":1285,"ld":49,"el":22,"ac":5,"tr":0,"bk":0,"acR":0},"n":{"op":0,"ld":0,"el":0,"ac":0,"tr":0,"bk":0,"acR":0}},{"d":"07-20","o":{"op":237,"ld":8,"el":5,"ac":4,"acR":0,"tr":0,"bk":0},"n":{"op":653,"ld":190,"el":82,"ac":38,"acR":39,"tr":2,"bk":1,"md":0,"web":97,"rx":0}},{"d":"07-21","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":341,"ld":203,"el":91,"ac":40,"acR":47,"tr":4,"bk":4,"md":0,"web":117,"rx":0}},{"d":"07-22","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":374,"ld":198,"el":86,"ac":39,"acR":38,"tr":2,"bk":2,"md":1,"web":111,"rx":0}},{"d":"07-23","o":{"op":2,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":243,"ld":104,"el":50,"ac":37,"acR":36,"tr":3,"bk":2,"md":2,"web":55,"rx":3}},{"d":"07-24","o":{"op":1,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":111,"ld":57,"el":29,"ac":12,"acR":12,"tr":0,"bk":0,"md":0,"web":55,"rx":0}},{"d":"07-25","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":94,"ld":39,"el":25,"ac":15,"acR":15,"tr":1,"bk":1,"md":0,"web":75,"rx":0}},{"d":"07-26","o":{"op":1,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":102,"ld":54,"el":31,"ac":22,"acR":22,"tr":4,"bk":4,"md":0,"web":97,"rx":0}},{"d":"07-27","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":91,"ld":52,"el":36,"ac":22,"acR":23,"tr":3,"bk":3,"md":4,"web":133,"rx":3}},{"d":"07-28","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":82,"ld":53,"el":31,"ac":18,"acR":19,"tr":1,"bk":1,"md":3,"web":105,"rx":3}},{"d":"07-29","o":{"op":0,"ld":0,"el":0,"ac":2,"acR":0,"tr":0,"bk":0},"n":{"op":110,"ld":72,"el":35,"ac":26,"acR":26,"tr":4,"bk":5,"md":1,"web":132,"rx":1}},{"d":"07-30","o":{"op":0,"ld":0,"el":0,"ac":1,"acR":0,"tr":0,"bk":0},"n":{"op":98,"ld":74,"el":43,"ac":8,"acR":9,"tr":2,"bk":2,"md":1,"web":96,"rx":1}},{"d":"07-31","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":83,"ld":34,"el":19,"ac":6,"acR":6,"tr":1,"bk":1,"md":4,"web":68,"rx":2}},{"d":"08-01","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":23,"ld":13,"el":7,"ac":10,"acR":10,"tr":2,"bk":0,"md":0,"web":63,"rx":0}},{"d":"08-02","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":46,"ld":29,"el":14,"ac":11,"acR":11,"tr":1,"bk":1,"md":0,"web":80,"rx":0}},{"d":"08-03","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":79,"ld":29,"el":15,"ac":8,"acR":4,"tr":1,"bk":1,"md":2,"web":100,"rx":2}},{"d":"08-04","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0},"n":{"op":53,"ld":31,"el":15,"ac":15,"acR":0,"tr":2,"bk":3,"md":2,"web":58,"rx":1}},{"d":"08-05","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":40,"el":19,"ac":15,"acR":0,"tr":3,"bk":1,"md":1,"web":60,"rx":2}},{"d":"08-06","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":51,"ld":31,"el":15,"ac":14,"acR":0,"tr":4,"bk":4,"md":3,"web":107,"rx":2}},{"d":"08-07","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":31,"el":24,"ac":13,"acR":0,"tr":3,"bk":3,"md":0,"web":110,"rx":0}},{"d":"08-08","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":24,"ld":21,"el":11,"ac":8,"acR":0,"tr":1,"bk":1,"md":0,"web":54,"rx":0}},{"d":"08-09","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":29,"el":17,"ac":17,"acR":0,"tr":2,"bk":3,"md":0,"web":64,"rx":0}},{"d":"08-10","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":11,"el":5,"ac":5,"acR":0,"tr":0,"bk":0,"md":6,"web":47,"rx":6}},{"d":"08-11","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":42,"ld":20,"el":13,"ac":7,"acR":0,"tr":1,"bk":2,"md":5,"web":47,"rx":2}},{"d":"08-12","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":41,"ld":21,"el":15,"ac":4,"acR":0,"tr":2,"bk":2,"md":0,"web":45,"rx":1}},{"d":"08-13","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":46,"ld":25,"el":13,"ac":7,"acR":0,"tr":3,"bk":3,"md":2,"web":45,"rx":1}},{"d":"08-14","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0},"n":{"op":43,"ld":33,"el":18,"ac":8,"acR":0,"tr":1,"bk":2,"md":3,"web":48,"rx":3}},{"d":"08-15","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0,"rx":0,"web":0},"n":{"op":62,"ld":46,"el":22,"ac":10,"acR":0,"tr":1,"bk":1,"md":1,"rx":0,"web":29}},{"d":"08-16","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0,"rx":0,"web":0},"n":{"op":77,"ld":35,"el":21,"ac":12,"acR":0,"tr":1,"bk":1,"md":0,"rx":0,"web":35}},{"d":"08-17","o":{"op":0,"ld":0,"el":0,"ac":0,"acR":0,"tr":0,"bk":0,"md":0,"rx":0,"web":0},"n":{"op":23,"ld":12,"el":1,"ac":5,"acR":0,"tr":0,"bk":0,"md":0,"rx":0,"web":2}}];
   var YEAR="2026", fullDate=function(i){return YEAR+"-"+TREND[i].d;}, idxByDate={};
   TREND.forEach(function(x,i){idxByDate[YEAR+"-"+x.d]=i;}); var LAST=TREND.length-1;
 
@@ -323,42 +366,43 @@
   // bl = short label shown as "of <bl>". Top row has no base.
   var BF=[
     {s:"Quiz",steps:[
-      {n:"Lead form opened",v:2128,d:"Unique visitors to the quiz page — Typeform's own count (the form itself)."},
-      {n:"Lead form completed",v:1554,bref:"Lead form opened",bl:"opens",d:"Form submissions — Typeform's own count. (Mixpanel's 'Lead Form Completed' event under-fires this, so we use Typeform.)"},
-      {n:"↳ Eligible",v:787,bref:"Lead form completed",bl:"completed",sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
-      {n:"↳ Not eligible",v:767,bref:"Lead form completed",bl:"completed",sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
+      {n:"Lead form opened",v:2172,d:"Unique visitors to the quiz page — Typeform's own count (the form itself)."},
+      {n:"Lead form completed",v:1587,bref:"Lead form opened",bl:"opens",d:"Form submissions — Typeform's own count. (Mixpanel's 'Lead Form Completed' event under-fires this, so we use Typeform.)"},
+      {n:"↳ Eligible",v:803,bref:"Lead form completed",bl:"completed",sub:1,d:"qualified = yes (Typeform) — this is the MQL count"},
+      {n:"↳ Not eligible",v:784,bref:"Lead form completed",bl:"completed",sub:1,d:"Mostly BMI < 27 — full reasons in the eligibility panel below"}]},
     {s:"Registration → account",steps:[
-      {n:"Registration started",v:839,bref:"Lead form completed",bl:"completed",d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
-      {n:"↳ email — reached OTP",v:410,bref:"Registration started",bl:"reg. started",sub:1,d:"OTP code sent (email sign-ups only)"},
-      {n:"↳ email — OTP verified",v:334,bref:"↳ email — reached OTP",bl:"OTP sent",sub:1,d:"Entered the code correctly"},
-      {n:"↳ Google sign-in (skips OTP)",v:183,bref:"Registration started",bl:"reg. started",sub:1,d:"Derived: Mixpanel 'registration completed' − OTP-verified. Name comes from Google — no OTP."},
-      {n:"Account created",v:439,bref:"Registration started",bl:"reg. started",te:1,d:"Real accounts · test excluded (business DB)."}]},
+      {n:"Registration started",v:856,bref:"Lead form completed",bl:"completed",d:"Began the account step (Mixpanel) — roughly the eligible share of completers"},
+      {n:"↳ email — reached OTP",v:419,bref:"Registration started",bl:"reg. started",sub:1,d:"OTP code sent (email sign-ups only)"},
+      {n:"↳ email — OTP verified",v:341,bref:"↳ email — reached OTP",bl:"OTP sent",sub:1,d:"Entered the code correctly"},
+      {n:"↳ Google sign-in (skips OTP)",v:187,bref:"Registration started",bl:"reg. started",sub:1,d:"Derived: Mixpanel 'registration completed' − OTP-verified. Name comes from Google — no OTP."},
+      {n:"Account created",v:452,bref:"Registration started",bl:"reg. started",te:1,d:"Real accounts · test excluded (business DB)."}]},
     {s:"Profile — name",steps:[
-      {n:"Name step started",v:197,bref:"Account created",bl:"accounts",d:"/collect-name · of accounts (email/standard route)"},
-      {n:"Name step completed",v:166,bref:"Name step started",bl:"name started",sub:1,d:"Name saved"}]},
+      {n:"Name step started",v:204,bref:"Account created",bl:"accounts",d:"/collect-name · of accounts (email/standard route)"},
+      {n:"Name step completed",v:172,bref:"Name step started",bl:"name started",sub:1,d:"Name saved"}]},
     {s:"Trial",steps:[
-      {n:"Trial started",v:54,bref:"Account created",bl:"accounts",te:1,d:"subscription created · Metabase · trial at signup"},
-      {n:"In trial (active)",v:42,bref:"Trial started",bl:"trials",te:1,sub:1,d:"still in trial"},
+      {n:"Trial started",v:55,bref:"Account created",bl:"accounts",te:1,d:"subscription created · Metabase · trial at signup"},
+      {n:"In trial (active)",v:43,bref:"Trial started",bl:"trials",te:1,sub:1,d:"still in trial"},
       {n:"Cancelled during trial",v:12,bref:"Trial started",bl:"trials",warn:1,te:1,sub:1,d:"dropped — churned before paying"}]},
     {s:"Consult & qualification",steps:[
-      {n:"Booked a consult",v:53,bref:"Account created",bl:"accounts",te:1,d:"Has a scheduled meeting (business DB, test excluded)."},
+      {n:"Booked a consult",v:54,bref:"Account created",bl:"accounts",te:1,d:"Has a scheduled meeting (business DB, test excluded)."},
       {n:"↳ Medical form before consult",v:27,bref:"Booked a consult",bl:"booked",sub:1,d:"did the medical form before the call — so the doctor has the history ready."},
       {n:"Meeting done",v:41,bref:"Booked a consult",bl:"booked",te:1,d:"Consult actually held (status=done). The rest: no-show, scheduled ahead or cancelled — see the Trial cohort block below."},
-      {n:"Qualified by doctor",v:38,bref:"Meeting done",bl:"meetings held",sub:1,te:1,d:"qualification_status = qualified after the consult. Health DB."}]},
+      {n:"Qualified by doctor",v:38,bref:"Meeting done",bl:"meetings held",sub:1,te:1,d:"qualification_status = qualified after the consult. Health DB."},
+      {n:"Received first prescription",v:33,bref:"Qualified by doctor",bl:"qualified",te:1,d:"Doctor issued their first prescription (business DB). Every new-flow patient who got one also downloaded it from the app."}]},
     {s:"App",steps:[
       {n:"Installed the app",v:52,bref:"Account created",bl:"accounts",te:1,d:"Has a Firebase push token = app installed & opened (business DB, test excluded)."}]}
   ];
-  var QUIZ=[{n:"Eligible ✓",v:787,c:"g"},{n:"BMI < 27",v:473,c:"c",k:1},{n:"BMI 27–29, no comorbidity",v:124,c:"c",k:1},{n:"Contraindication",v:117,c:"w"},{n:"Under 18",v:39,c:"w"},{n:"Pregnant / breastfeeding",v:14,c:"w"}]; var QTOT=1554;
+  var QUIZ=[{n:"Eligible ✓",v:803,c:"g"},{n:"BMI < 27",v:483,c:"c",k:1},{n:"BMI 27–29, no comorbidity",v:125,c:"c",k:1},{n:"Contraindication",v:117,c:"w"},{n:"Under 18",v:45,c:"w"},{n:"Pregnant / breastfeeding",v:14,c:"w"}]; var QTOT=1587;
   var STEPX=[
-    {s:"Quiz — opened → completed",src:"Typeform",nS:2128,nF:1554,oS:55292,oF:22176},
-    {s:"Registration — started → account",src:"Mixpanel + DB",nS:839,nF:439,oS:1253,oF:546,dir:1},
-    {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:410,nF:334,oS:263,oF:193,sub:1},
-    {s:"Name — started → completed",src:"Mixpanel · email route",nS:197,nF:166,oS:198,oF:182,sub:1}];
+    {s:"Quiz — opened → completed",src:"Typeform",nS:2172,nF:1587,oS:55292,oF:22176},
+    {s:"Registration — started → account",src:"Mixpanel + DB",nS:856,nF:452,oS:1253,oF:546,dir:1},
+    {s:"OTP — code sent → verified",src:"Mixpanel · email route",nS:419,nF:341,oS:263,oF:193,sub:1},
+    {s:"Name — started → completed",src:"Mixpanel · email route",nS:204,nF:172,oS:198,oF:182,sub:1}];
   var VERDICT=[
-    {l:"Form completion — opened → completed",n:73.0,o:40.1,st:"up",note:"of people who open the form, % who submit it · Typeform"},
-    {l:"Activation — free trial vs paid sub",n:6.9,o:7.6,st:"watch",note:"of MQL — new: free trial (30) · old: paid subscription (105). Real test: trial→paid ~20 Aug · DB"},
+    {l:"Form completion — opened → completed",n:73.1,o:40.1,st:"up",note:"of people who open the form, % who submit it · Typeform"},
+    {l:"Activation — free trial vs paid sub",n:6.8,o:7.6,st:"watch",note:"of MQL — new: free trial (30) · old: paid subscription (105). Real test: trial→paid ~20 Aug · DB"},
     {l:"Consult booking",n:6.7,o:11.3,st:"design",note:"of MQL · new defers the consult behind the trial (28 vs 156) · DB"},
-    {l:"App install",n:6.6,o:19.4,st:"watch",note:"of MQL · web-first flow isn't getting users into the app (23 vs 267) · DB"}];
+    {l:"App install",n:6.5,o:19.4,st:"watch",note:"of MQL · web-first flow isn't getting users into the app (23 vs 267) · DB"}];
   var NCF=[{n:"Not Eligible (nurture)",id:80,d:154,o:63,c:16},{n:"Payment Recovery",id:85,d:93,o:23,c:10},
     {n:"Appointment & Medical Form",id:73,d:62,o:25,c:11},{n:"Welcome (eligible)",id:83,d:50,o:16,c:3},
     {n:"Booking Recovery",id:86,d:18,o:4,c:0},{n:"Post Medical Form Conf.",id:81,d:18,o:5,c:1},
@@ -379,7 +423,7 @@
 
   var S={from:0,to:LAST,flow:"n",metric:"funnel",cmp:false,fromB:0,toB:0};
   function sum(m,fl,a,b){var t=0;for(var i=a;i<=b;i++)t+=(TREND[i][fl][m]||0);return t;}
-  function agg(fl,a,b){ var K=["op","ld","el","ac","tr","bk","md"],r={};
+  function agg(fl,a,b){ var K=["op","ld","el","ac","tr","bk","md","rx","web"],r={};
     if(fl==="both"){K.forEach(function(k){r[k]=sum(k,"o",a,b)+sum(k,"n",a,b);});return r;}
     K.forEach(function(k){r[k]=sum(k,fl,a,b);});return r; }
   function fmtDelta(a,b,pp){ if(a===null||b===null||(a===0&&b===0))return {t:"—",c:"flat"};
@@ -413,6 +457,7 @@
       {l:"Trial",v:A.tr},
       {l:"Booked",v:A.bk},
       {l:"Attended",v:A.md},
+      {l:"Rx",v:A.rx},
       {l:"Subscribed",v:0,pending:true}];
     var bdg=document.getElementById("funnelBadge");
     if(bdg)bdg.textContent="NEW FLOW · "+rangeLabel().toUpperCase()+" · % OF LEADS";
@@ -559,17 +604,17 @@
   // ===== Email campaigns tab =====
   // Ordered by the user journey (not by volume). 12 live NCF automations.
   var EMAIL=[
-    {id:83,n:"Welcome (eligible)",d:"Account-created confirmation (subject: \"¡Cuenta creada!\") — welcomes the eligible user and shows their eligibility results.",sent:128,dl:124,o:51,c:14,cv:0,u:2},
-    {id:80,n:"Not Eligible (nurture)",d:"Sends results to non-eligible leads, then a nurture sequence.",sent:269,dl:269,o:162,c:43,cv:0,u:7},
+    {id:83,n:"Welcome (eligible)",d:"Account-created confirmation (subject: \"¡Cuenta creada!\") — welcomes the eligible user and shows their eligibility results.",sent:135,dl:131,o:56,c:17,cv:0,u:2},
+    {id:80,n:"Not Eligible (nurture)",d:"Sends results to non-eligible leads, then a nurture sequence.",sent:274,dl:274,o:166,c:43,cv:0,u:7},
     {id:87,n:"Profile Completion Recovery",d:"Nudges users who verified their email but didn't finish the profile.",sent:22,dl:22,o:9,c:3,cv:1,u:0},
-    {id:73,n:"Appointment & Medical Form",d:"Confirms the booked consult + reschedule link, and chases the medical form.",sent:211,dl:208,o:108,c:42,cv:43,u:0},
-    {id:81,n:"Post Medical Form Confirmation",d:"Confirms the pre-call / medical form was received before the call.",sent:55,dl:54,o:32,c:6,cv:0,u:0},
-    {id:86,n:"Booking Recovery",d:"Recovers users who qualified but haven't booked a consult.",sent:47,dl:45,o:16,c:2,cv:1,u:1},
+    {id:73,n:"Appointment & Medical Form",d:"Confirms the booked consult + reschedule link, and chases the medical form.",sent:214,dl:211,o:111,c:43,cv:43,u:0},
+    {id:81,n:"Post Medical Form Confirmation",d:"Confirms the pre-call / medical form was received before the call.",sent:56,dl:55,o:33,c:6,cv:0,u:0},
+    {id:86,n:"Booking Recovery",d:"Recovers users who qualified but haven't booked a consult.",sent:48,dl:46,o:17,c:3,cv:1,u:1},
     {id:79,n:"No-show",d:"Follows up when a user misses their doctor video-call.",sent:36,dl:36,o:14,c:10,cv:8,u:0},
     {id:74,n:"Reschedule / Cancellation",d:"Sends a reschedule link after a consult is canceled.",sent:36,dl:34,o:13,c:1,cv:3,u:0},
     {id:103,n:"Reschedule Meeting Confirmation",d:"Confirms the new time + join link after a reschedule (B2C, email only).",sent:9,dl:9,o:3,c:1,cv:6,u:0},
-    {id:85,n:"Payment Recovery",d:"Recovers failed trial / subscription payments.",sent:323,dl:288,o:76,c:66,cv:4,u:0},
-    {id:75,n:"App Onboarding",d:"After an eligible consult: invites to download the app + install reminders (day 1–20, email/SMS). Draft — trigger events not wired yet, so 0 so far.",sent:84,dl:82,o:34,c:9,cv:6,u:1},
+    {id:85,n:"Payment Recovery",d:"Recovers failed trial / subscription payments.",sent:337,dl:301,o:79,c:69,cv:4,u:0},
+    {id:75,n:"App Onboarding",d:"After an eligible consult: invites to download the app + install reminders (day 1–20, email/SMS). Draft — trigger events not wired yet, so 0 so far.",sent:88,dl:86,o:35,c:9,cv:6,u:1},
     {id:82,n:"Trial Pre-Renewal Reminder",d:"Reminds trial users before the trial converts to paid (~day 27).",sent:0,dl:0,o:0,c:0,cv:0,u:0}];
   function renderEmail(){
     var T={sent:0,dl:0,o:0,c:0,cv:0,u:0}; EMAIL.forEach(function(e){for(var k in T)T[k]+=e[k];});
@@ -597,11 +642,69 @@
     b.setAttribute("aria-selected","true"); var t=b.getAttribute("data-tab");
     var main=(t==="overview"||t==="analysis"),tf=document.getElementById("tabFunnel");
     tf.hidden=!main; if(main)tf.setAttribute("data-view",t);
+    document.getElementById("tabWeekly").hidden=t!=="weekly";
     document.getElementById("tabEmail").hidden=t!=="email"; document.getElementById("tabSources").hidden=t!=="sources";
     if(t==="overview")drawChart();
   });});
 
-  var SESS={trials:54,seen:40,scheduled:0,stuck:7,gone:7,unsub:12,unsubAfterDr:5,stNoshow:1,stNever:4,stCancel:2,subQual:34,subDisq:0,subNone:1,unsubQual:4,unsubDisq:1,unsubNone:0,nsRateN:30.4,nsRateO:17.1,toConsultN:1.6,toConsultO:3.9};
+  var SESS={trials:55,seen:40,scheduled:1,stuck:7,gone:7,unsub:12,unsubAfterDr:5,stNoshow:1,stNever:4,stCancel:2,subQual:34,subDisq:0,subNone:1,unsubQual:4,unsubDisq:1,unsubNone:0,nsRateN:30.4,nsRateO:17.1,toConsultN:1.6,toConsultO:3.9};
+  // ---- weekly review: last two complete weeks (Mon–Sun), new flow ----------
+  // lag:1 = happens days after the previous step, so a within-week ratio is
+  // meaningless (this week's attendees booked in an earlier week → >100%).
+  var WKCOLS=[{k:"web",l:"Website"},{k:"op",l:"Form opens"},{k:"ld",l:"Leads"},
+    {k:"el",l:"MQL"},{k:"ac",l:"Accounts"},{k:"tr",l:"Trials"},{k:"bk",l:"Booked",lag:1},
+    {k:"md",l:"Attended",lag:1},{k:"rx",l:"Rx",lag:1}];
+  var DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  function dObj(i){var p=TREND[i].d.split("-");return new Date(Date.UTC(+YEAR,+p[0]-1,+p[1]));}
+  function weekWindows(){
+    // walk back from the newest day to the last complete Sunday
+    var last=dObj(LAST),dow=(last.getUTCDay()+6)%7;            // 0=Mon … 6=Sun
+    var endW1=LAST-dow-1;                                       // last complete Sunday
+    if(endW1<0)return null;
+    var w1=[endW1-6,endW1],w2=[endW1-13,endW1-7];
+    if(w1[0]<0)return null;
+    if(w2[0]<0)w2=null;
+    return {w1:w1,w2:w2};
+  }
+  function wkSum(win){var o={};WKCOLS.forEach(function(c){o[c.k]=sum(c.k,"n",win[0],win[1]);});return o;}
+  function fmtRange(win){return dLbl(win[0])+" – "+dLbl(win[1]);}
+  function wkTable(win){
+    var rows="",tot=wkSum(win);
+    for(var i=win[0];i<=win[1];i++){
+      var d=dObj(i),dw=(d.getUTCDay()+6)%7,x=TREND[i].n;
+      rows+='<tr'+(dw>=5?' class="wknd"':'')+'><td>'+DOW[dw]+' <span style="opacity:.6">'+dLbl(i)+'</span></td>'+
+        WKCOLS.map(function(c){var v=x[c.k]||0;return '<td>'+(v?'<b>'+v+'</b>':'<span class="z">0</span>')+'</td>';}).join("")+'</tr>';
+    }
+    var head='<tr><th>Day</th>'+WKCOLS.map(function(c){return '<th>'+c.l+'</th>';}).join("")+'</tr>';
+    var totr='<tr class="wktot"><td>Week</td>'+WKCOLS.map(function(c){return '<td>'+tot[c.k]+'</td>';}).join("")+'</tr>';
+    // step-to-step conversion for the week (only meaningful on weekly totals).
+    // Starts at Leads: Website and Form opens are separate front doors — ads link
+    // straight to /evaluacion — so web → form opens is not a conversion.
+    var rate='<tr class="wkrate"><td>vs previous step</td>'+WKCOLS.map(function(c,j){
+      if(j<2||c.lag)return '<td>—</td>';
+      var prev=tot[WKCOLS[j-1].k],v=tot[c.k];
+      return '<td>'+(prev?Math.round(v/prev*100)+"%":"—")+'</td>';}).join("")+'</tr>';
+    return head+rows+totr+rate;
+  }
+  function renderWeekly(){
+    var W=weekWindows();
+    if(!W){document.getElementById("wkCompare").innerHTML='<p class="card-sub">Not enough data yet for a full week.</p>';return;}
+    var t1=wkSum(W.w1),t2=W.w2?wkSum(W.w2):null;
+    document.getElementById("wkRangeLbl").textContent=fmtRange(W.w1)+(W.w2?"  vs  "+fmtRange(W.w2):"");
+    document.getElementById("wkCompare").innerHTML='<div class="wkc">'+WKCOLS.map(function(c){
+      var a=t1[c.k],b=t2?t2[c.k]:null,d=(b===null||b===0)?null:Math.round((a-b)/b*1000)/10;
+      var cls=d===null?"flat":(d>0?"up":d<0?"down":"flat");
+      var txt=d===null?"—":(d>0?"▲ +":d<0?"▼ ":"– ")+d+"%";
+      return '<div class="wkc-i"><div class="wkc-l">'+c.l+'</div><div class="wkc-v">'+a+'</div>'+
+        '<div class="wkc-d '+cls+'">'+txt+'</div><div class="wkc-p">'+(b===null?"no prior week":"prev "+b)+'</div></div>';
+    }).join("")+'</div>';
+    document.getElementById("wk1Lbl").textContent=fmtRange(W.w1);
+    document.getElementById("wk1").innerHTML=wkTable(W.w1);
+    if(W.w2){document.getElementById("wk2Lbl").textContent=fmtRange(W.w2);
+      document.getElementById("wk2").innerHTML=wkTable(W.w2);}
+    else{document.getElementById("wk2").closest(".card").hidden=true;}
+  }
+
   function renderSess(){
     function tiles(arr){return arr.map(function(t){return '<div class="sess-tile'+(t[2]?" "+t[2]:"")+'"><div class="st-v">'+t[1]+'</div><div class="st-l">'+t[0]+'</div></div>';}).join("");}
     document.getElementById("sessCount").textContent=SESS.trials;
@@ -634,7 +737,7 @@
         '<div class="vnote">'+m.s+'</div></div>';
     }).join("");
   }
-  setDates();renderFunnelHero();renderVerdict();renderFunnel();renderStep();renderQuiz();renderSess();renderEmail();renderAll();
+  setDates();renderFunnelHero();renderVerdict();renderFunnel();renderStep();renderQuiz();renderSess();renderWeekly();renderEmail();renderAll();
   window.addEventListener("resize",drawChart);
   new MutationObserver(drawChart).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   if(window.matchMedia)window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",drawChart);

@@ -62,7 +62,8 @@ BF_NAMES = [
     "Registration started", "↳ email — reached OTP", "↳ email — OTP verified",
     "↳ Google sign-in (skips OTP)", "Name step started", "Name step completed",
     "Account created", "Trial started", "In trial (active)", "Cancelled during trial",
-    "Booked a consult", "Meeting done", "Qualified by doctor", "Installed the app",
+    "Booked a consult", "Meeting done", "Qualified by doctor",
+    "Received first prescription", "Installed the app",
 ]
 STEPX_LABELS = [
     "Quiz — opened → completed", "Registration — started → account",
@@ -134,7 +135,8 @@ def _check_invariants(html, warns):
 
     for key, name in [("ld", "Lead form completed"), ("el", "↳ Eligible"),
                       ("ac", "Account created"), ("tr", "Trial started"),
-                      ("bk", "Booked a consult"), ("md", "Meeting done")]:
+                      ("bk", "Booked a consult"), ("md", "Meeting done"),
+                      ("rx", "Received first prescription")]:
         total = _embedded_bf(html, name)
         s = trend_sum(key)
         if total is not None and abs(s - total) > max(2, total * 0.02):
@@ -166,6 +168,7 @@ def main():
     quiz = T(lambda: metrics.typeform_quiz(tf), "quiz/Typeform")
     steps = T(lambda: metrics.mixpanel_steps(mp, frm, to), "steps/Mixpanel")
     opens_d = T(lambda: metrics.mixpanel_opens_daily(mp, frm, to), "opens/Mixpanel")
+    web_d = T(lambda: metrics.mixpanel_web_daily(mp, frm, to), "web/Mixpanel")
     trend_db = T(lambda: metrics.trend_db_daily(mb), "trend/Metabase")
     emails = T(lambda: metrics.emails_cio(cio), "emails/CIO")
     vd = metrics.verdict_new(fn, quiz) if (fn and quiz) else None
@@ -227,6 +230,7 @@ def main():
                           ("Cancelled during trial", fn["cancelled"]),
                           ("Booked a consult", bk_g),
                           ("Meeting done", md_g),
+                          ("Received first prescription", fn["prescribed"]),
                           ("Installed the app", fn["installed"])]:
             html = bf(html, name, val)
     if doctor:  # was hard-coded/stale; now live from the Health DB
@@ -271,30 +275,34 @@ def main():
     #    ac/tr/bk/md (business DB). So the range-summed funnel matches the totals.
     qld = quiz["daily_ld"] if quiz else {}
     qel = quiz["daily_el"] if quiz else {}
-    if opens_d or qld or trend_db:
-        od, td = opens_d or {}, trend_db or {}
+    if opens_d or qld or trend_db or web_d:
+        od, td, wd = opens_d or {}, trend_db or {}, web_d or {}
         tm = re.search(r"(var TREND\s*=\s*)(\[.*?\])(;)", html, re.S)
         series = json.loads(tm.group(2))
         by_date = {e["d"]: e for e in series}
-        for d in sorted(set(od) | set(qld) | set(td)):
+        for d in sorted(set(od) | set(qld) | set(td) | set(wd)):
             if d < LAUNCH_MMDD:
                 continue
             e = by_date.get(d)
             if e is None:
-                z = {"op": 0, "ld": 0, "el": 0, "ac": 0, "acR": 0, "tr": 0, "bk": 0, "md": 0}
+                z = {"op": 0, "ld": 0, "el": 0, "ac": 0, "acR": 0, "tr": 0, "bk": 0,
+                     "md": 0, "rx": 0, "web": 0}
                 e = {"d": d, "o": dict(z), "n": dict(z)}
                 series.append(e)
                 by_date[d] = e
             upd = {}
             if od:
                 upd["op"] = od.get(d, 0)
+            if wd:
+                upd["web"] = wd.get(d, 0)   # total site traffic (not new-flow filtered)
             if qld:
                 upd["ld"] = qld.get(d, 0)
             if qel:
                 upd["el"] = qel.get(d, 0)
             if d in td:
                 upd.update(ac=td[d].get("ac", 0), tr=td[d].get("tr", 0),
-                           bk=td[d].get("bk", 0), md=td[d].get("md", 0))
+                           bk=td[d].get("bk", 0), md=td[d].get("md", 0),
+                           rx=td[d].get("rx", 0))
             e["n"].update(upd)
         series.sort(key=lambda e: e["d"])
         trend_lit = tm.group(1) + json.dumps(series, separators=(",", ":"), ensure_ascii=False) + tm.group(3)

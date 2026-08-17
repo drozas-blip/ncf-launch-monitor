@@ -93,6 +93,10 @@ select
   (select count(distinct lower(m.user_email)) from meetings m join u on u.email=lower(m.user_email)) booked,
   (select count(distinct lower(m.user_email)) from meetings m join u on u.email=lower(m.user_email)
      where m.state='scheduled' and m.time < now() and m.user_no_show_at is null)              meeting_done,
+  -- first prescription issued by the doctor (business DB). For the new-flow
+  -- cohort issued == downloaded today, i.e. everyone who got one opened it.
+  (select count(distinct p.patient_id) from prescriptions p join u on u.id=p.patient_id
+     where p.issued_at is not null)                                                           prescribed,
   (select count(*) from u join fb on fb.user_id=u.id)                                         installed
 from u limit 1
 """
@@ -101,7 +105,8 @@ from u limit 1
 def funnel_db(mb):
     r = mb.one(14, _FUNNEL_SQL)
     return {k: int(r.get(k) or 0) for k in
-            ("accounts", "trials", "in_trial", "cancelled", "booked", "meeting_done", "installed")}
+            ("accounts", "trials", "in_trial", "cancelled", "booked", "meeting_done",
+             "prescribed", "installed")}
 
 
 # --------------------------------------- doctor qualification (Health DB) ---
@@ -186,18 +191,24 @@ md as (select to_char(fd,'MM-DD') d, count(*) c from (
          select lower(m.user_email) e, min(m.time) fd
          from meetings m join u on u.email=lower(m.user_email)
          where m.state='scheduled' and m.time < now() and m.user_no_show_at is null
-           and m.time >= '{LAUNCH_DATE}' group by 1) x group by 1)
-select days.d, coalesce(acc.c,0) ac, coalesce(tr.c,0) tr, coalesce(bk.c,0) bk, coalesce(md.c,0) md
+           and m.time >= '{LAUNCH_DATE}' group by 1) x group by 1),
+rx as (select to_char(fd,'MM-DD') d, count(*) c from (
+         select p.patient_id, min(p.issued_at) fd
+         from prescriptions p join u on u.id=p.patient_id
+         where p.issued_at is not null and p.issued_at >= '{LAUNCH_DATE}' group by 1) x group by 1)
+select days.d, coalesce(acc.c,0) ac, coalesce(tr.c,0) tr, coalesce(bk.c,0) bk,
+       coalesce(md.c,0) md, coalesce(rx.c,0) rx
 from days left join acc on acc.d=days.d left join tr on tr.d=days.d
           left join bk on bk.d=days.d left join md on md.d=days.d
+          left join rx on rx.d=days.d
 order by days.d
 """
 
 
 def trend_db_daily(mb):
-    """Return {'MM-DD': {'ac','tr','bk','md'}} for the new flow since launch."""
+    """Return {'MM-DD': {'ac','tr','bk','md','rx'}} for the new flow since launch."""
     rows = mb.query(14, _TREND_DAILY_SQL)
-    return {r["d"]: {"ac": int(r["ac"]), "tr": int(r["tr"]), "bk": int(r["bk"]), "md": int(r["md"])} for r in rows}
+    return {r["d"]: {k: int(r[k]) for k in ("ac", "tr", "bk", "md", "rx")} for r in rows}
 
 
 # ----------------------------------------------------------- Mixpanel ---
@@ -231,6 +242,18 @@ def _mp_daily_sum(mp, events, frm, to, typ="general"):
 def mixpanel_opens_daily(mp, frm, to):
     """Daily form page-views (general) for the new flow → {'MM-DD': opens}."""
     return _mp_daily_sum(mp, MP_OPENS, frm, to)
+
+
+# Marketing site (findbalance.app + metodobalance.es — same landing, two domains).
+# NOTE: this event carries no `landing_source`, so it is TOTAL site traffic and
+# cannot be filtered to the new flow, unlike every other step. Labelled as such.
+MP_WEB = "Landing view"
+
+
+def mixpanel_web_daily(mp, frm, to):
+    """Daily unique website visitors → {'MM-DD': visitors}."""
+    return {d[5:]: c for d, c in
+            _mp_daily(mp, MP_WEB, frm, to, typ="unique", where=None).items()}
 
 
 def mixpanel_steps(mp, frm, to):
